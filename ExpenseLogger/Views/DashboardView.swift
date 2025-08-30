@@ -83,7 +83,7 @@ struct DashboardView: View {
                         CTTextStyle.caption("Welcome back! Here's your spending overview")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // Monthly Summary Hero Card
                     CTCard {
@@ -101,7 +101,7 @@ struct DashboardView: View {
                                 VStack(alignment: .trailing, spacing: CTSpacing.xs) {
                                     CTTextStyle.caption("Income")
                                     Text("KES \(monthlyIncome, specifier: "%.2f")")
-                                        .font(.titleMedium)
+                                        .font(.claudeTitleMedium)
                                         .foregroundColor(.successColor)
                                 }
                             }
@@ -109,33 +109,33 @@ struct DashboardView: View {
                             CTTextStyle.caption(currentMonth)
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // Quick Stats Row
                     HStack(spacing: CTSpacing.md) {
                         // Transaction Count
-                        CTCard(hasShadow: false) {
+                        CTCard(hasBorder: false) {
                             VStack(alignment: .leading, spacing: CTSpacing.xs) {
                                 Text("\(transactionCount)")
-                                    .font(.titleMedium)
+                                    .font(.claudeTitleMedium)
                                     .foregroundColor(.textPrimary)
                                 CTTextStyle.caption("Transactions")
                             }
                         }
                         
                         // Top Category
-                        CTCard(hasShadow: false) {
+                        CTCard(hasBorder: false) {
                             VStack(alignment: .leading, spacing: CTSpacing.xs) {
                                 HStack(spacing: CTSpacing.xs) {
                                     if let category = topCategory {
                                         Image(systemName: category.icon)
                                             .foregroundColor(category.color)
                                         Text(category.rawValue)
-                                            .font(.headline)
+                                            .font(.claudeHeadline)
                                             .foregroundColor(.textPrimary)
                                     } else {
                                         Text("None")
-                                            .font(.headline)
+                                            .font(.claudeHeadline)
                                             .foregroundColor(.textSecondary)
                                     }
                                 }
@@ -144,16 +144,16 @@ struct DashboardView: View {
                         }
                         
                         // Average per Day
-                        CTCard(hasShadow: false) {
+                        CTCard(hasBorder: false) {
                             VStack(alignment: .leading, spacing: CTSpacing.xs) {
                                 Text("KES \(averagePerDay, specifier: "%.0f")")
-                                    .font(.titleMedium)
+                                    .font(.claudeTitleMedium)
                                     .foregroundColor(.textPrimary)
                                 CTTextStyle.caption("Daily Avg")
                             }
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // Recent Transactions Section
                     VStack(alignment: .leading, spacing: CTSpacing.md) {
@@ -201,13 +201,13 @@ struct DashboardView: View {
                             }
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     Spacer()
                 }
-                .ctVerticalSpacing(CTSpacing.lg)
+                .claudeSectionSpacing()
             }
-            .ctScreenBackground()
+            .claudeScreenBackground()
             .refreshable {
                 // Refresh data
             }

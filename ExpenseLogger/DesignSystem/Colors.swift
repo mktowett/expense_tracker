@@ -8,21 +8,31 @@
 import SwiftUI
 
 extension Color {
-    // MARK: - Background Colors
+    // MARK: - Claude-inspired Background Colors
     static let primaryBackground = Color(hex: "#FFFFFF")
-    static let secondaryBackground = Color(hex: "#F8F9FA")
+    static let secondaryBackground = Color(hex: "#F7F7F8")
+    static let tertiaryBackground = Color(hex: "#F1F1F3")
     
-    // MARK: - Text Colors
-    static let textPrimary = Color(hex: "#1F2937")
-    static let textSecondary = Color(hex: "#6B7280")
+    // MARK: - Claude-inspired Text Colors
+    static let textPrimary = Color(hex: "#2D2D2D")
+    static let textSecondary = Color(hex: "#656565")
+    static let textTertiary = Color(hex: "#8E8EA0")
     
-    // MARK: - Accent Colors
-    static let accentColor = Color(hex: "#F59E0B")
-    static let borderColor = Color(hex: "#E5E7EB")
+    // MARK: - Claude-inspired Accent Colors
+    static let accentColor = Color(hex: "#D97706")  // Claude's warm orange
+    static let accentSecondary = Color(hex: "#F59E0B")
+    static let borderColor = Color(hex: "#E1E1E6")
+    static let borderLight = Color(hex: "#EEEEEF")
     
-    // MARK: - Status Colors
-    static let successColor = Color(hex: "#10B981")
-    static let errorColor = Color(hex: "#EF4444")
+    // MARK: - Claude-inspired Status Colors
+    static let successColor = Color(hex: "#059669")
+    static let errorColor = Color(hex: "#DC2626")
+    static let warningColor = Color(hex: "#D97706")
+    
+    // MARK: - Claude-inspired Interactive Colors
+    static let hoverBackground = Color(hex: "#F3F4F6")
+    static let activeBackground = Color(hex: "#E5E7EB")
+    static let focusRing = Color(hex: "#D97706").opacity(0.3)
     
     // MARK: - Helper initializer for hex colors
     init(hex: String) {

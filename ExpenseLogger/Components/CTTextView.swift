@@ -17,29 +17,30 @@ struct CTTextView: View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: $text)
                 .focused($isFocused)
-                .font(.body)
+                .font(.claudeBody)
                 .foregroundColor(.textPrimary)
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
             
             if text.isEmpty {
                 Text(placeholder)
-                    .font(.body)
-                    .foregroundColor(.textSecondary)
+                    .font(.claudeBody)
+                    .foregroundColor(.textTertiary)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
                     .allowsHitTesting(false)
             }
         }
-        .padding(CTSpacing.md)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .frame(minHeight: minHeight)
         .background(Color.primaryBackground)
-        .cornerRadius(CTCornerRadius.button)
+        .cornerRadius(8) // Claude uses consistent 8px radius
         .overlay(
-            RoundedRectangle(cornerRadius: CTCornerRadius.button)
-                .stroke(isFocused ? Color.accentColor : Color.borderColor, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isFocused ? Color.accentColor : Color.borderLight, lineWidth: isFocused ? 2 : 1)
         )
-        .animation(.easeInOut(duration: 0.2), value: isFocused)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }
 

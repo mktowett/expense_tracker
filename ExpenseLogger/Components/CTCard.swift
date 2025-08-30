@@ -10,39 +10,52 @@ import SwiftUI
 struct CTCard<Content: View>: View {
     let content: Content
     var backgroundColor: Color = .primaryBackground
-    var hasShadow: Bool = true
+    var borderColor: Color = .borderLight
+    var hasBorder: Bool = true
+    var padding: CGFloat = 16
     
-    init(backgroundColor: Color = .primaryBackground, hasShadow: Bool = true, @ViewBuilder content: () -> Content) {
+    init(
+        backgroundColor: Color = .primaryBackground,
+        borderColor: Color = .borderLight,
+        hasBorder: Bool = true,
+        padding: CGFloat = 16,
+        @ViewBuilder content: () -> Content
+    ) {
         self.backgroundColor = backgroundColor
-        self.hasShadow = hasShadow
+        self.borderColor = borderColor
+        self.hasBorder = hasBorder
+        self.padding = padding
         self.content = content()
     }
     
     var body: some View {
         content
-            .padding(CTSpacing.md)
+            .padding(padding)
             .background(backgroundColor)
-            .cornerRadius(CTCornerRadius.card)
+            .cornerRadius(8) // Claude uses consistent 8px radius
             .overlay(
-                RoundedRectangle(cornerRadius: CTCornerRadius.card)
-                    .stroke(Color.borderColor, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(hasBorder ? borderColor : .clear, lineWidth: 1)
             )
-            .conditionalShadow(hasShadow)
     }
 }
 
 
 #Preview {
-    VStack(spacing: CTSpacing.md) {
+    VStack(spacing: 16) {
         CTCard {
-            VStack(alignment: .leading, spacing: CTSpacing.sm) {
+            VStack(alignment: .leading, spacing: 8) {
                 CTTextStyle.headline("Card Title")
-                CTTextStyle.body("This is a sample card with some content to demonstrate the styling.")
+                CTTextStyle.body("This is a sample card with Claude-inspired styling.")
             }
         }
         
-        CTCard(backgroundColor: .secondaryBackground, hasShadow: false) {
-            CTTextStyle.caption("Card without shadow")
+        CTCard(backgroundColor: .secondaryBackground, hasBorder: false) {
+            CTTextStyle.caption("Card without border")
+        }
+        
+        CTCard(backgroundColor: .tertiaryBackground, padding: 12) {
+            CTTextStyle.small("Compact card with less padding")
         }
     }
     .padding()

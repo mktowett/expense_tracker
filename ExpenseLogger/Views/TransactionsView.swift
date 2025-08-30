@@ -96,163 +96,177 @@ struct TransactionsView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Search and Filter Bar
-                VStack(spacing: CTSpacing.md) {
-                    // Search Bar
-                    HStack(spacing: CTSpacing.sm) {
-                        HStack(spacing: CTSpacing.sm) {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.textSecondary)
-                            
-                            TextField("Search transactions...", text: $searchText)
-                                .textFieldStyle(PlainTextFieldStyle())
-                        }
-                        .padding(CTSpacing.md)
-                        .background(Color.primaryBackground)
-                        .cornerRadius(CTCornerRadius.button)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: CTCornerRadius.button)
-                                .stroke(Color.borderColor, lineWidth: 1)
-                        )
-                        
-                        Button(action: { showingFilters.toggle() }) {
-                            Image(systemName: "line.3.horizontal.decrease.circle")
-                                .font(.title2)
-                                .foregroundColor(.accentColor)
-                        }
-                    }
-                    
-                    // Filter Pills
-                    if showingFilters {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: CTSpacing.sm) {
-                                // Sort Options
-                                Menu {
-                                    ForEach(SortOption.allCases, id: \.self) { option in
-                                        Button(action: { selectedSortOption = option }) {
-                                            HStack {
-                                                Text(option.rawValue)
-                                                if selectedSortOption == option {
-                                                    Image(systemName: "checkmark")
-                                                }
-                                            }
-                                        }
-                                    }
-                                } label: {
-                                    HStack(spacing: CTSpacing.xs) {
-                                        Image(systemName: selectedSortOption.systemImage)
-                                        Text(selectedSortOption.rawValue)
-                                        Image(systemName: "chevron.down")
-                                    }
-                                    .font(.caption)
-                                    .padding(.horizontal, CTSpacing.md)
-                                    .padding(.vertical, CTSpacing.sm)
-                                    .background(Color.accentColor)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(CTCornerRadius.button)
-                                }
-                                
-                                // Category Filters
-                                Button(action: { selectedCategoryFilter = nil }) {
-                                    Text("All Categories")
-                                        .font(.caption)
-                                        .padding(.horizontal, CTSpacing.md)
-                                        .padding(.vertical, CTSpacing.sm)
-                                        .background(selectedCategoryFilter == nil ? Color.accentColor : Color.secondaryBackground)
-                                        .foregroundColor(selectedCategoryFilter == nil ? .white : .textPrimary)
-                                        .cornerRadius(CTCornerRadius.button)
-                                }
-                                
-                                ForEach(TransactionCategory.allCases.filter { $0 != .uncategorized }) { category in
-                                    Button(action: { selectedCategoryFilter = category }) {
-                                        HStack(spacing: CTSpacing.xs) {
-                                            Image(systemName: category.icon)
-                                            Text(category.rawValue)
-                                        }
-                                        .font(.caption)
-                                        .padding(.horizontal, CTSpacing.md)
-                                        .padding(.vertical, CTSpacing.sm)
-                                        .background(selectedCategoryFilter == category ? category.color : Color.secondaryBackground)
-                                        .foregroundColor(selectedCategoryFilter == category ? .white : .textPrimary)
-                                        .cornerRadius(CTCornerRadius.button)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, CTSpacing.horizontalMargin)
-                        }
-                    }
-                }
-                .padding(.horizontal, CTSpacing.horizontalMargin)
-                .padding(.vertical, CTSpacing.md)
-                .background(Color.secondaryBackground)
+                searchAndFilterSection
+                transactionListSection
+            }
+            .claudeScreenBackground()
+            .navigationTitle("Transactions")
+            .navigationBarTitleDisplayMode(.large)
+            .refreshable {
+                // Pull to refresh
+            }
+        }
+    }
+    
+    private var searchAndFilterSection: some View {
+        VStack(spacing: CTSpacing.md) {
+            searchBarSection
+            
+            if showingFilters {
+                filterPillsSection
+            }
+        }
+        .padding(.horizontal, CTSpacing.screenPadding)
+        .padding(.vertical, CTSpacing.md)
+        .background(Color.secondaryBackground)
+    }
+    
+    private var searchBarSection: some View {
+        HStack(spacing: CTSpacing.sm) {
+            HStack(spacing: CTSpacing.sm) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.textSecondary)
                 
-                // Transaction List
-                if filteredAndSortedTransactions.isEmpty {
-                    Spacer()
-                    
-                    VStack(spacing: CTSpacing.lg) {
-                        Image(systemName: searchText.isEmpty ? "list.bullet.clipboard" : "magnifyingglass")
-                            .font(.system(size: 64))
-                            .foregroundColor(.textSecondary)
-                        
-                        VStack(spacing: CTSpacing.sm) {
-                            CTTextStyle.headline(searchText.isEmpty ? "No Transactions Yet" : "No Results Found")
-                            CTTextStyle.body(searchText.isEmpty ? "Your transaction history will appear here" : "Try adjusting your search or filters")
-                        }
-                        
-                        if searchText.isEmpty {
-                            CTButton(title: "Add Your First Transaction", action: {
-                                // Navigate to add transaction
-                            })
-                        }
-                    }
-                    .padding(CTSpacing.xl)
-                    
-                    Spacer()
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                            ForEach(groupedTransactions, id: \.0) { sectionTitle, transactions in
-                                Section {
-                                    ForEach(Array(transactions.enumerated()), id: \.element.id) { index, transaction in
-                                        VStack(spacing: 0) {
-                                            TransactionListRow(transaction: transaction) {
-                                                // Handle transaction tap
-                                            }
-                                            
-                                            if index < transactions.count - 1 {
-                                                Divider()
-                                                    .padding(.leading, 60)
-                                            }
-                                        }
-                                    }
-                                } header: {
-                                    HStack {
-                                        Text(sectionTitle)
-                                            .font(.headline)
-                                            .foregroundColor(.textPrimary)
-                                        
-                                        Spacer()
-                                        
-                                        Text("\(transactions.count) transaction\(transactions.count == 1 ? "" : "s")")
-                                            .font(.caption)
-                                            .foregroundColor(.textSecondary)
-                                    }
-                                    .padding(.horizontal, CTSpacing.horizontalMargin)
-                                    .padding(.vertical, CTSpacing.sm)
-                                    .background(Color.secondaryBackground)
+                TextField("Search transactions...", text: $searchText)
+                    .textFieldStyle(PlainTextFieldStyle())
+            }
+            .padding(CTSpacing.md)
+            .background(Color.primaryBackground)
+            .cornerRadius(CTCornerRadius.input)
+            .overlay(
+                RoundedRectangle(cornerRadius: CTCornerRadius.input)
+                    .stroke(Color.borderColor, lineWidth: 1)
+            )
+            
+            Button(action: { showingFilters.toggle() }) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .font(.title2)
+                    .foregroundColor(.accentColor)
+            }
+        }
+    }
+    
+    private var filterPillsSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: CTSpacing.sm) {
+                // Sort Options
+                Menu {
+                    ForEach(SortOption.allCases, id: \.self) { option in
+                        Button(action: { selectedSortOption = option }) {
+                            HStack {
+                                Text(option.rawValue)
+                                if selectedSortOption == option {
+                                    Image(systemName: "checkmark")
                                 }
                             }
                         }
                     }
-                    .refreshable {
-                        // Refresh data
+                } label: {
+                    HStack(spacing: CTSpacing.xs) {
+                        Image(systemName: selectedSortOption.systemImage)
+                        Text(selectedSortOption.rawValue)
+                        Image(systemName: "chevron.down")
+                    }
+                    .font(.caption)
+                    .padding(.horizontal, CTSpacing.md)
+                    .padding(.vertical, CTSpacing.sm)
+                    .background(Color.accentColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(CTCornerRadius.input)
+                }
+                
+                // Category Filters
+                Button(action: { selectedCategoryFilter = nil }) {
+                    Text("All Categories")
+                        .font(.caption)
+                        .padding(.horizontal, CTSpacing.md)
+                        .padding(.vertical, CTSpacing.sm)
+                        .background(selectedCategoryFilter == nil ? Color.accentColor : Color.secondaryBackground)
+                        .foregroundColor(selectedCategoryFilter == nil ? .white : .textPrimary)
+                        .cornerRadius(CTCornerRadius.input)
+                }
+                
+                ForEach(TransactionCategory.allCases.filter { $0 != .uncategorized }) { category in
+                    Button(action: { selectedCategoryFilter = category }) {
+                        HStack(spacing: CTSpacing.xs) {
+                            Image(systemName: category.icon)
+                            Text(category.rawValue)
+                        }
+                        .font(.caption)
+                        .padding(.horizontal, CTSpacing.md)
+                        .padding(.vertical, CTSpacing.sm)
+                        .background(selectedCategoryFilter == category ? category.color : Color.secondaryBackground)
+                        .foregroundColor(selectedCategoryFilter == category ? .white : .textPrimary)
+                        .cornerRadius(CTCornerRadius.input)
                     }
                 }
             }
-            .navigationTitle("Transactions")
-            .navigationBarTitleDisplayMode(.large)
-            .background(Color.primaryBackground)
+            .padding(.horizontal, CTSpacing.screenPadding)
+        }
+    }
+    
+    private var transactionListSection: some View {
+        Group {
+            // Transaction List
+            if filteredAndSortedTransactions.isEmpty {
+                Spacer()
+                
+                VStack(spacing: CTSpacing.lg) {
+                    Image(systemName: searchText.isEmpty ? "list.bullet.clipboard" : "magnifyingglass")
+                        .font(.system(size: 64))
+                        .foregroundColor(.textSecondary)
+                    
+                    VStack(spacing: CTSpacing.sm) {
+                        CTTextStyle.headline(searchText.isEmpty ? "No Transactions Yet" : "No Results Found")
+                        CTTextStyle.body(searchText.isEmpty ? "Your transaction history will appear here" : "Try adjusting your search or filters")
+                    }
+                    
+                    if searchText.isEmpty {
+                        CTButton(title: "Add Your First Transaction", action: {
+                            // Navigate to add transaction
+                        })
+                    }
+                }
+                .padding(CTSpacing.xl)
+                
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                        ForEach(groupedTransactions, id: \.0) { sectionTitle, transactions in
+                            Section {
+                                ForEach(Array(transactions.enumerated()), id: \.element.id) { index, transaction in
+                                    VStack(spacing: 0) {
+                                        TransactionListRow(transaction: transaction) {
+                                            // Handle transaction tap
+                                        }
+                                        
+                                        if index < transactions.count - 1 {
+                                            Divider()
+                                                .padding(.leading, 60)
+                                        }
+                                    }
+                                }
+                            } header: {
+                                HStack {
+                                    Text(sectionTitle)
+                                        .font(.headline)
+                                        .foregroundColor(.textPrimary)
+                                    
+                                    Spacer()
+                                    
+                                    Text("\(transactions.count) transaction\(transactions.count == 1 ? "" : "s")")
+                                        .font(.caption)
+                                        .foregroundColor(.textSecondary)
+                                }
+                                .padding(.horizontal, CTSpacing.screenPadding)
+                                .padding(.vertical, CTSpacing.sm)
+                                .background(Color.secondaryBackground)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

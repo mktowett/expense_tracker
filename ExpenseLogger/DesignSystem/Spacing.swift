@@ -7,26 +7,42 @@
 
 import SwiftUI
 
-// MARK: - Spacing Constants (8px grid system)
+// MARK: - Claude-inspired Spacing Constants
 struct CTSpacing {
+    // Base spacing units (4px grid system like Claude)
     static let xs: CGFloat = 4
     static let sm: CGFloat = 8
-    static let md: CGFloat = 16
-    static let lg: CGFloat = 24
-    static let xl: CGFloat = 32
-    static let xxl: CGFloat = 48
+    static let md: CGFloat = 12
+    static let lg: CGFloat = 16
+    static let xl: CGFloat = 20
+    static let xxl: CGFloat = 24
+    static let xxxl: CGFloat = 32
     
-    // MARK: - Default margins
-    static let horizontalMargin: CGFloat = 16
+    // Component-specific spacing
+    static let cardPadding: CGFloat = 16
+    static let sectionSpacing: CGFloat = 24
+    static let screenPadding: CGFloat = 16
+    
+    // Layout spacing
+    static let listItemSpacing: CGFloat = 12
+    
+    /// Button spacing for consistent button layouts
+    static let buttonSpacing: CGFloat = 12
+    
+    /// Horizontal margin for screen edges (backward compatibility)
+    static let horizontalMargin: CGFloat = screenPadding
 }
 
-// MARK: - Corner Radius Constants
+// MARK: - Claude-inspired Corner Radius
 struct CTCornerRadius {
-    static let button: CGFloat = 8
-    static let card: CGFloat = 12
+    static let standard: CGFloat = 8  // Claude's consistent radius
+    static let card: CGFloat = 8
+    static let input: CGFloat = 8
 }
 
-// MARK: - Shadow Constants
+// MARK: - Claude-inspired Visual Effects (minimal shadows)
 struct CTShadow {
-    static let subtle = (offset: CGSize(width: 0, height: 1), radius: CGFloat(3), opacity: 0.1)
+    // Claude uses very subtle shadows or none at all
+    static let none = (offset: CGSize.zero, radius: CGFloat(0), opacity: 0.0)
+    static let subtle = (offset: CGSize(width: 0, height: 1), radius: CGFloat(2), opacity: 0.05)
 }

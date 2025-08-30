@@ -8,43 +8,60 @@
 import SwiftUI
 
 extension Font {
-    // MARK: - Typography System
-    static let titleLarge = Font.custom("SF Pro Display", size: 28).weight(.bold)
-    static let titleMedium = Font.custom("SF Pro Display", size: 22).weight(.semibold)
-    static let headline = Font.custom("SF Pro Text", size: 17).weight(.semibold)
-    static let body = Font.custom("SF Pro Text", size: 17).weight(.regular)
-    static let caption = Font.custom("SF Pro Text", size: 12).weight(.regular)
+    // MARK: - Claude-inspired Typography System
+    static let claudeTitleLarge = Font.system(size: 24, weight: .semibold, design: .default)
+    static let claudeTitleMedium = Font.system(size: 20, weight: .medium, design: .default)
+    static let claudeHeadline = Font.system(size: 16, weight: .medium, design: .default)
+    static let claudeBody = Font.system(size: 14, weight: .regular, design: .default)
+    static let claudeBodyMedium = Font.system(size: 14, weight: .medium, design: .default)
+    static let claudeCaption = Font.system(size: 12, weight: .regular, design: .default)
+    static let claudeSmall = Font.system(size: 11, weight: .regular, design: .default)
 }
 
-// MARK: - Text Styles for consistent usage
+// MARK: - Claude-inspired Text Styles
 struct CTTextStyle {
     static func titleLarge(_ text: String) -> some View {
         Text(text)
-            .font(.titleLarge)
+            .font(.claudeTitleLarge)
             .foregroundColor(.textPrimary)
+            .lineSpacing(2)
     }
     
     static func titleMedium(_ text: String) -> some View {
         Text(text)
-            .font(.titleMedium)
+            .font(.claudeTitleMedium)
             .foregroundColor(.textPrimary)
+            .lineSpacing(1)
     }
     
     static func headline(_ text: String) -> some View {
         Text(text)
-            .font(.headline)
+            .font(.claudeHeadline)
             .foregroundColor(.textPrimary)
     }
     
     static func body(_ text: String) -> some View {
         Text(text)
-            .font(.body)
+            .font(.claudeBody)
+            .foregroundColor(.textPrimary)
+            .lineSpacing(1)
+    }
+    
+    static func bodyMedium(_ text: String) -> some View {
+        Text(text)
+            .font(.claudeBodyMedium)
             .foregroundColor(.textPrimary)
     }
     
     static func caption(_ text: String) -> some View {
         Text(text)
-            .font(.caption)
+            .font(.claudeCaption)
             .foregroundColor(.textSecondary)
+    }
+    
+    static func small(_ text: String) -> some View {
+        Text(text)
+            .font(.claudeSmall)
+            .foregroundColor(.textTertiary)
     }
 }

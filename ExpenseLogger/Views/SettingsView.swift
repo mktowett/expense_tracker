@@ -32,7 +32,7 @@ struct SettingsView: View {
                         CTTextStyle.caption("Customize your expense tracking experience")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // App Info Section
                     CTCard {
@@ -52,7 +52,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // Categories Management
                     CTCard {
@@ -106,7 +106,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // Preferences Section
                     CTCard {
@@ -176,7 +176,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // Data Management Section
                     CTCard {
@@ -206,7 +206,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     // About Section
                     CTCard {
@@ -246,13 +246,13 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    .ctHorizontalPadding()
+                    .claudeScreenPadding()
                     
                     Spacer()
                 }
-                .ctVerticalSpacing(CTSpacing.lg)
+                .claudeSectionSpacing()
             }
-            .ctScreenBackground()
+            .claudeScreenBackground()
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
         }
@@ -358,11 +358,11 @@ struct ExportDataView: View {
                         dismiss()
                     }, style: .secondary)
                 }
-                .ctHorizontalPadding()
+                .claudeScreenPadding()
                 
                 Spacer()
             }
-            .ctScreenBackground()
+            .claudeScreenBackground()
             .navigationTitle("Export Data")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -383,45 +383,48 @@ struct CategoriesManagementView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: CTSpacing.lg) {
-                    CTTextStyle.caption("Manage your expense categories")
-                        .ctHorizontalPadding()
-                    
-                    CTCard {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            CTTextStyle.headline("Available Categories")
-                            
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: CTSpacing.md) {
-                                ForEach(TransactionCategory.allCases) { category in
-                                    HStack(spacing: CTSpacing.sm) {
-                                        Image(systemName: category.icon)
-                                            .foregroundColor(category.color)
-                                        
-                                        Text(category.rawValue)
-                                            .font(.body)
-                                            .foregroundColor(.textPrimary)
-                                        
-                                        Spacer()
-                                    }
-                                    .padding(CTSpacing.sm)
-                                    .background(Color.secondaryBackground)
-                                    .cornerRadius(CTCornerRadius.button)
-                                }
-                            }
-                        }
-                    }
-                    .ctHorizontalPadding()
-                    
-                    Spacer()
+                    categoryDescriptionSection
+                    categoriesGridSection
                 }
-                .ctVerticalSpacing(CTSpacing.lg)
+                .claudeScreenPadding()
             }
-            .ctScreenBackground()
+            .claudeScreenBackground()
             .navigationTitle("Categories")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private var categoryDescriptionSection: some View {
+        CTTextStyle.caption("Manage your expense categories")
+    }
+    
+    private var categoriesGridSection: some View {
+        CTCard {
+            VStack(alignment: .leading, spacing: CTSpacing.md) {
+                CTTextStyle.headline("Available Categories")
+                
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: CTSpacing.md) {
+                    ForEach(TransactionCategory.allCases) { category in
+                        HStack(spacing: CTSpacing.sm) {
+                            Image(systemName: category.icon)
+                                .foregroundColor(category.color)
+                            
+                            Text(category.rawValue)
+                                .font(.body)
+                                .foregroundColor(.textPrimary)
+                            
+                            Spacer()
+                        }
+                        .padding(CTSpacing.sm)
+                        .background(Color.secondaryBackground)
+                        .cornerRadius(CTCornerRadius.input)
                     }
                 }
             }

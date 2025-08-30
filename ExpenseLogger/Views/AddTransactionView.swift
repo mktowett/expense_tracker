@@ -24,112 +24,24 @@ struct AddTransactionView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(alignment: .leading, spacing: CTSpacing.lg) {
-                    // Header
-                    VStack(alignment: .leading, spacing: CTSpacing.sm) {
-                        CTTextStyle.titleLarge("Add Transaction")
-                        CTTextStyle.caption("Paste your M-Pesa or bank SMS here...")
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .ctHorizontalPadding()
+                LazyVStack(alignment: .leading, spacing: CTSpacing.lg) {
+                    headerSection
+                    smsInputSection
                     
-                    // SMS Input Section
-                    VStack(alignment: .leading, spacing: CTSpacing.md) {
-                        CTTextStyle.headline("SMS Message")
-                        
-                        CTTextView(
-                            placeholder: "Paste your M-Pesa or bank SMS here...",
-                            text: $smsText,
-                            minHeight: 150
-                        )
-                        .focused($isTextViewFocused)
-                        .onChange(of: smsText) { _, newValue in
-                            parseSMSText(newValue)
-                        }
-                    }
-                    .ctHorizontalPadding()
-                    
-                    // Transaction Preview Card
                     if showingPreview, let transaction = parsedTransaction {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            CTTextStyle.headline("Transaction Preview")
-                            
-                            CTCard {
-                                VStack(alignment: .leading, spacing: CTSpacing.md) {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                            CTTextStyle.caption("Amount")
-                                            Text("KES \(transaction.amount, specifier: "%.2f")")
-                                                .font(.titleMedium)
-                                                .foregroundColor(transaction.type == .income ? .successColor : .textPrimary)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        VStack(alignment: .trailing, spacing: CTSpacing.xs) {
-                                            CTTextStyle.caption("Type")
-                                            Text(transaction.type.rawValue)
-                                                .font(.headline)
-                                                .foregroundColor(transaction.type == .income ? .successColor : .errorColor)
-                                        }
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                        CTTextStyle.caption("Merchant")
-                                        CTTextStyle.body(transaction.merchant)
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                        CTTextStyle.caption("Date & Time")
-                                        CTTextStyle.body(Date().formatted(date: .abbreviated, time: .shortened))
-                                    }
-                                }
-                            }
-                        }
-                        .ctHorizontalPadding()
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        transactionPreviewSection(transaction: transaction)
                     }
                     
-                    // Category Selection
                     if showingPreview {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            CTTextStyle.headline("Category")
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: CTSpacing.sm) {
-                                    ForEach(TransactionCategory.allCases) { category in
-                                        CategoryTag(
-                                            category: category,
-                                            isSelected: selectedCategory == category
-                                        ) {
-                                            selectedCategory = category
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, CTSpacing.horizontalMargin)
-                            }
-                        }
-                        .ctHorizontalPadding()
-                    }
-                    
-                    // Notes Section
-                    if showingPreview {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            CTTextStyle.headline("Notes (Optional)")
-                            
-                            CTTextField(
-                                placeholder: "Add any additional notes...",
-                                text: $notes
-                            )
-                        }
-                        .ctHorizontalPadding()
+                        categorySelectionSection
+                        notesSection
                     }
                     
                     Spacer()
                 }
-                .ctVerticalSpacing(CTSpacing.lg)
+                .claudeSectionSpacing()
             }
-            .ctScreenBackground()
+            .claudeScreenBackground()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -160,6 +72,106 @@ struct AddTransactionView: View {
         } message: {
             Text("Your transaction has been saved successfully.")
         }
+    }
+    
+    // MARK: - View Components
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: CTSpacing.sm) {
+            CTTextStyle.titleLarge("Add Transaction")
+            CTTextStyle.caption("Paste your M-Pesa or bank SMS here...")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .claudeScreenPadding()
+    }
+    
+    private var smsInputSection: some View {
+        VStack(alignment: .leading, spacing: CTSpacing.md) {
+            CTTextStyle.headline("SMS Message")
+            
+            CTTextView(
+                placeholder: "Paste your M-Pesa or bank SMS here...",
+                text: $smsText,
+                minHeight: 150
+            )
+            .focused($isTextViewFocused)
+            .onChange(of: smsText) { _, newValue in
+                parseSMSText(newValue)
+            }
+        }
+        .claudeScreenPadding()
+    }
+    
+    private func transactionPreviewSection(transaction: (amount: Double, merchant: String, type: TransactionType)) -> some View {
+        VStack(alignment: .leading, spacing: CTSpacing.md) {
+            CTTextStyle.headline("Transaction Preview")
+            
+            CTCard {
+                VStack(alignment: .leading, spacing: CTSpacing.md) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                            CTTextStyle.caption("Amount")
+                            Text("KES \(transaction.amount, specifier: "%.2f")")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(transaction.type == .income ? .successColor : .textPrimary)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: CTSpacing.xs) {
+                            CTTextStyle.caption("Type")
+                            Text(transaction.type.rawValue)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(transaction.type == .income ? .successColor : .errorColor)
+                        }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                        CTTextStyle.caption("Merchant")
+                        CTTextStyle.body(transaction.merchant)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                        CTTextStyle.caption("Date & Time")
+                        CTTextStyle.body(Date().formatted(date: .abbreviated, time: .shortened))
+                    }
+                }
+            }
+        }
+        .claudeScreenPadding()
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+    
+    private var categorySelectionSection: some View {
+        VStack(alignment: .leading, spacing: CTSpacing.md) {
+            CTTextStyle.headline("Category")
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: CTSpacing.sm) {
+                    ForEach(TransactionCategory.allCases) { category in
+                        CategoryTag(
+                            category: category,
+                            isSelected: selectedCategory == category
+                        ) {
+                            selectedCategory = category
+                        }
+                    }
+                }
+                .padding(.horizontal, CTSpacing.screenPadding)
+            }
+        }
+        .claudeScreenPadding()
+    }
+    
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: CTSpacing.md) {
+            CTTextStyle.headline("Notes (Optional)")
+            
+            CTTextField(
+                placeholder: "Add any additional notes...",
+                text: $notes
+            )
+        }
+        .claudeScreenPadding()
     }
     
     private func parseSMSText(_ text: String) {
@@ -224,9 +236,9 @@ struct CategoryTag: View {
             .padding(.vertical, CTSpacing.sm)
             .background(isSelected ? category.color : Color.secondaryBackground)
             .foregroundColor(isSelected ? .white : .textPrimary)
-            .cornerRadius(CTCornerRadius.button)
+            .cornerRadius(CTCornerRadius.input)
             .overlay(
-                RoundedRectangle(cornerRadius: CTCornerRadius.button)
+                RoundedRectangle(cornerRadius: CTCornerRadius.input)
                     .stroke(isSelected ? Color.clear : Color.borderColor, lineWidth: 1)
             )
         }
