@@ -107,49 +107,50 @@ struct DashboardView: View {
                     .claudeScreenPadding()
                     
                     // M-Pesa Balance Hero Card
-                    VStack(alignment: .leading, spacing: CTSpacing.md) {
+                    VStack(alignment: .leading, spacing: CTSpacing.lg) {
+                        // Header Row: Title and Date
                         HStack {
-                            VStack(alignment: .leading, spacing: CTSpacing.sm) {
-                                Text("M-Pesa Balance")
+                            Text("M-Pesa Balance")
+                                .font(.balanceLabel)
+                                .foregroundColor(.textSecondary)
+                            
+                            Spacer()
+                            
+                            Text(currentMonth)
+                                .font(.transactionDate)
+                                .foregroundColor(.textTertiary)
+                        }
+                        
+                        // Main Balance Amount
+                        if let balance = currentMpesaBalance {
+                            HStack(spacing: 6) {
+                                Text("KES")
                                     .font(.balanceLabel)
                                     .foregroundColor(.textSecondary)
-                                if let balance = currentMpesaBalance {
-                                    HStack(spacing: 6) {
-                                        Text("KES")
-                                            .font(.balanceLabel)
-                                            .foregroundColor(.textSecondary)
-                                        Text("\(NSDecimalNumber(decimal: balance).doubleValue, specifier: "%.2f")")
-                                            .font(.balanceAmount)
-                                            .foregroundColor(balance >= 0 ? .successColor : .errorColor)
-                                    }
-                                } else {
-                                    Text("No Balance Data")
-                                        .font(.system(size: 24, weight: .medium, design: .rounded))
-                                        .foregroundColor(.textSecondary)
-                                }
-                                
-                                Spacer()
-                                
-                                VStack(alignment: .trailing, spacing: CTSpacing.xs) {
-                                    Text("Net Cash Flow")
-                                        .font(.statsLabel)
-                                        .foregroundColor(.textSecondary)
-                                    Text("KES \(NSDecimalNumber(decimal: netCashFlow).doubleValue, specifier: "%.2f")")
-                                        .font(.statsAmount)
-                                        .foregroundColor(netCashFlow >= 0 ? .successColor : .errorColor)
-                                }
+                                Text("\(NSDecimalNumber(decimal: balance).doubleValue, specifier: "%.2f")")
+                                    .font(.balanceAmount)
+                                    .foregroundColor(balance >= 0 ? .successColor : .errorColor)
+                            }
+                        } else {
+                            Text("No Balance Data")
+                                .font(.system(size: 24, weight: .medium, design: .rounded))
+                                .foregroundColor(.textSecondary)
+                        }
+                        
+                        // Bottom Row: Net Flow and Fees
+                        HStack {
+                            VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                                Text("Net Flow: \(NSDecimalNumber(decimal: netCashFlow).doubleValue, specifier: "%.0f")")
+                                    .font(.statsAmount)
+                                    .foregroundColor(netCashFlow >= 0 ? .successColor : .errorColor)
                             }
                             
-                            HStack {
-                                Text(currentMonth)
-                                    .font(.transactionDate)
+                            Spacer()
+                            
+                            VStack(alignment: .trailing, spacing: CTSpacing.xs) {
+                                Text("Fees: \(NSDecimalNumber(decimal: monthlyFees).doubleValue, specifier: "%.0f")")
+                                    .font(.statsAmount)
                                     .foregroundColor(.textTertiary)
-                                Spacer()
-                                if monthlyFees > 0 {
-                                    Text("Fees: KES \(NSDecimalNumber(decimal: monthlyFees).doubleValue, specifier: "%.2f")")
-                                        .font(.transactionDate)
-                                        .foregroundColor(.textTertiary)
-                                }
                             }
                         }
                     }
