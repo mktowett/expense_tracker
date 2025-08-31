@@ -132,7 +132,7 @@ struct TransactionsView: View {
         HStack(spacing: CTSpacing.sm) {
             HStack(spacing: CTSpacing.sm) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.textSecondary)
+                    .foregroundColor(.iconPrimary)
                 
                 TextField("Search transactions...", text: $searchText)
                     .textFieldStyle(PlainTextFieldStyle())
@@ -142,13 +142,13 @@ struct TransactionsView: View {
             .cornerRadius(CTCornerRadius.input)
             .overlay(
                 RoundedRectangle(cornerRadius: CTCornerRadius.input)
-                    .stroke(Color.borderColor, lineWidth: 1)
+                    .stroke(Color.cardBorder, lineWidth: 1)
             )
             
             Button(action: { showingFilters.toggle() }) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                     .font(.title2)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.iconPrimary)
             }
         }
     }
@@ -171,25 +171,35 @@ struct TransactionsView: View {
                 } label: {
                     HStack(spacing: CTSpacing.xs) {
                         Image(systemName: selectedSortOption.systemImage)
+                            .foregroundColor(.iconPrimary)
                         Text(selectedSortOption.rawValue)
                         Image(systemName: "chevron.down")
+                            .foregroundColor(.iconPrimary)
                     }
-                    .font(.caption)
+                    .font(.transactionType)
+                    .foregroundColor(.textSecondary)
                     .padding(.horizontal, CTSpacing.md)
                     .padding(.vertical, CTSpacing.sm)
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
+                    .background(Color.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CTCornerRadius.input)
+                            .stroke(Color.cardBorder, lineWidth: 1)
+                    )
                     .cornerRadius(CTCornerRadius.input)
                 }
                 
                 // Category Filters
                 Button(action: { selectedCategoryFilter = nil }) {
                     Text("All Categories")
-                        .font(.caption)
+                        .font(.transactionType)
+                        .foregroundColor(selectedCategoryFilter == nil ? .white : .textSecondary)
                         .padding(.horizontal, CTSpacing.md)
                         .padding(.vertical, CTSpacing.sm)
-                        .background(selectedCategoryFilter == nil ? Color.accentColor : Color.secondaryBackground)
-                        .foregroundColor(selectedCategoryFilter == nil ? .white : .textPrimary)
+                        .background(selectedCategoryFilter == nil ? Color.accentColor : Color.cardBackground)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CTCornerRadius.input)
+                                .stroke(selectedCategoryFilter == nil ? Color.clear : Color.cardBorder, lineWidth: 1)
+                        )
                         .cornerRadius(CTCornerRadius.input)
                 }
                 
@@ -197,13 +207,18 @@ struct TransactionsView: View {
                     Button(action: { selectedCategoryFilter = category }) {
                         HStack(spacing: CTSpacing.xs) {
                             Image(systemName: category.icon ?? "tag")
+                                .foregroundColor(.iconPrimary)
                             Text(category.name ?? "Unknown")
                         }
-                        .font(.caption)
+                        .font(.transactionType)
+                        .foregroundColor(selectedCategoryFilter == category ? .white : .textSecondary)
                         .padding(.horizontal, CTSpacing.md)
                         .padding(.vertical, CTSpacing.sm)
-                        .background(selectedCategoryFilter?.id == category.id ? Color(hex: category.color ?? "#6B7280") : Color.secondaryBackground)
-                        .foregroundColor(selectedCategoryFilter?.id == category.id ? .white : .textPrimary)
+                        .background(selectedCategoryFilter?.id == category.id ? Color.accentColor : Color.cardBackground)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CTCornerRadius.input)
+                                .stroke(selectedCategoryFilter?.id == category.id ? Color.clear : Color.cardBorder, lineWidth: 1)
+                        )
                         .cornerRadius(CTCornerRadius.input)
                     }
                 }
@@ -239,31 +254,32 @@ struct TransactionsView: View {
                 Spacer()
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    LazyVStack(spacing: CTSpacing.lg, pinnedViews: [.sectionHeaders]) {
                         ForEach(groupedTransactions, id: \.0) { sectionTitle, transactions in
                             Section {
-                                ForEach(Array(transactions.enumerated()), id: \.element.id) { index, transaction in
-                                    VStack(spacing: 0) {
+                                VStack(spacing: 0) {
+                                    ForEach(Array(transactions.enumerated()), id: \.element.id) { index, transaction in
                                         TransactionListRow(transaction: transaction) {
                                             // Handle transaction tap
                                         }
                                         
                                         if index < transactions.count - 1 {
                                             Divider()
-                                                .padding(.leading, 60)
+                                                .background(Color.cardBorder)
                                         }
                                     }
                                 }
+                                .claudeCard()
                             } header: {
                                 HStack {
                                     Text(sectionTitle)
-                                        .font(.headline)
+                                        .font(.balanceLabel)
                                         .foregroundColor(.textPrimary)
                                     
                                     Spacer()
                                     
                                     Text("\(transactions.count) transaction\(transactions.count == 1 ? "" : "s")")
-                                        .font(.caption)
+                                        .font(.transactionType)
                                         .foregroundColor(.textSecondary)
                                 }
                                 .padding(.horizontal, CTSpacing.screenPadding)
@@ -272,6 +288,7 @@ struct TransactionsView: View {
                             }
                         }
                     }
+                    .padding(.horizontal, CTSpacing.screenPadding)
                 }
             }
         }
@@ -294,51 +311,60 @@ struct TransactionListRow: View {
             HStack(spacing: CTSpacing.md) {
                 // Category Icon
                 Image(systemName: transaction.category?.icon ?? "tag")
-                    .font(.title2)
+                    .font(.system(size: 20, weight: .medium))
                     .foregroundColor(.iconPrimary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 40, height: 40)
+                    .background(Color.iconPrimary.opacity(0.1))
+                    .clipShape(Circle())
                 
                 // Transaction Details
                 VStack(alignment: .leading, spacing: CTSpacing.xs) {
                     Text(transaction.merchant)
-                        .font(.headline)
+                        .font(.merchantName)
                         .foregroundColor(.textPrimary)
                         .lineLimit(1)
                     
                     HStack(spacing: CTSpacing.xs) {
                         Text(transaction.date.formatted(date: .abbreviated, time: .omitted))
-                            .font(.caption)
+                            .font(.transactionDate)
                             .foregroundColor(.textSecondary)
                         
-                        if let notes = transaction.notes, !notes.isEmpty {
+                        Text("•")
+                            .font(.transactionDate)
+                            .foregroundColor(.textTertiary)
+                        
+                        Text(transaction.transactionType.rawValue.capitalized)
+                            .font(.transactionType)
+                            .foregroundColor(.textTertiary)
+                        
+                        if let category = transaction.category {
                             Text("•")
-                                .font(.caption)
-                                .foregroundColor(.textSecondary)
+                                .font(.transactionDate)
+                                .foregroundColor(.textTertiary)
                             
-                            Text(notes)
-                                .font(.caption)
-                                .foregroundColor(.textSecondary)
-                                .lineLimit(1)
+                            Text(category.name)
+                                .font(.transactionType)
+                                .foregroundColor(.textTertiary)
                         }
                     }
                 }
                 
                 Spacer()
                 
-                // Amount and Category
+                // Amount and Fees
                 VStack(alignment: .trailing, spacing: CTSpacing.xs) {
                     Text(transaction.isIncome ? "+\(self.formatAmount(transaction.amount))" : "-\(self.formatAmount(transaction.amount))")
-                        .font(.headline)
-                        .foregroundColor(transaction.isIncome ? .successColor : .textPrimary)
+                        .font(.transactionAmount)
+                        .foregroundColor(transaction.isIncome ? .successColor : .errorColor)
                     
-                    Text(transaction.category?.name ?? "Uncategorized")
-                        .font(.caption)
-                        .foregroundColor(.textSecondary)
+                    if transaction.fees > 0 {
+                        Text("Fee: \(formatAmount(transaction.fees))")
+                            .font(.transactionType)
+                            .foregroundColor(.textTertiary)
+                    }
                 }
             }
-            .padding(.horizontal, CTSpacing.horizontalMargin)
             .padding(.vertical, CTSpacing.md)
-            .background(Color.primaryBackground)
         }
         .buttonStyle(PlainButtonStyle())
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
