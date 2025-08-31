@@ -9,15 +9,21 @@ import SwiftUI
 import SwiftData
 
 struct AddTransactionView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     
-    @State private var smsText: String = ""
-    @State private var parsedTransaction: (amount: Double, merchant: String, type: TransactionType)?
-    @State private var selectedCategory: TransactionCategory = .uncategorized
+    @State private var smsText = ""
+    @State private var parsedTransaction: (amount: Double, merchant: String, type: String)?
+    @State private var showingPreview = false
+    @State private var parsingError: String?
+    
+    @State private var selectedCategory: Category?
     @State private var notes: String = ""
-    @State private var showingPreview: Bool = false
     @State private var showingSaveAlert: Bool = false
+    
+    @Query(sort: \Category.name) private var categories: [Category]
+    
+    private let smsConverter = SMSTransactionConverter()
     
     @FocusState private var isTextViewFocused: Bool
     
@@ -95,13 +101,27 @@ struct AddTransactionView: View {
             )
             .focused($isTextViewFocused)
             .onChange(of: smsText) { _, newValue in
-                parseSMSText(newValue)
+                parseSMSText()
+            }
+            
+            // Show parsing error if any
+            if let error = parsingError {
+                HStack(spacing: CTSpacing.xs) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.errorColor)
+                        .font(.caption)
+                    
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.errorColor)
+                }
+                .padding(.top, CTSpacing.xs)
             }
         }
         .claudeScreenPadding()
     }
     
-    private func transactionPreviewSection(transaction: (amount: Double, merchant: String, type: TransactionType)) -> some View {
+    private func transactionPreviewSection(transaction: (amount: Double, merchant: String, type: String)) -> some View {
         VStack(alignment: .leading, spacing: CTSpacing.md) {
             CTTextStyle.headline("Transaction Preview")
             
@@ -112,16 +132,16 @@ struct AddTransactionView: View {
                             CTTextStyle.caption("Amount")
                             Text("KES \(transaction.amount, specifier: "%.2f")")
                                 .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(transaction.type == .income ? .successColor : .textPrimary)
+                                .foregroundColor(transaction.type == "income" ? .successColor : .textPrimary)
                         }
                         
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: CTSpacing.xs) {
                             CTTextStyle.caption("Type")
-                            Text(transaction.type.rawValue)
+                            Text(transaction.type)
                                 .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(transaction.type == .income ? .successColor : .errorColor)
+                                .foregroundColor(transaction.type == "income" ? .successColor : .errorColor)
                         }
                     }
                     
@@ -147,10 +167,10 @@ struct AddTransactionView: View {
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: CTSpacing.sm) {
-                    ForEach(TransactionCategory.allCases) { category in
+                    ForEach(categories, id: \.id) { category in
                         CategoryTag(
                             category: category,
-                            isSelected: selectedCategory == category
+                            isSelected: selectedCategory?.id == category.id
                         ) {
                             selectedCategory = category
                         }
@@ -174,22 +194,41 @@ struct AddTransactionView: View {
         .claudeScreenPadding()
     }
     
-    private func parseSMSText(_ text: String) {
-        if text.isEmpty {
-            parsedTransaction = nil
+    private func parseSMSText() {
+        guard !smsText.isEmpty else {
             showingPreview = false
+            parsedTransaction = nil
+            parsingError = nil
             return
         }
         
-        if let parsed = MockData.parseTransactionFromSMS(text) {
-            parsedTransaction = parsed
+        let parser = SimpleSMSParser()
+        let result = parser.parseMessage(smsText)
+        
+        switch result {
+        case .success(let smsTransaction):
+            parsedTransaction = (
+                amount: Double(truncating: smsTransaction.amount as NSNumber),
+                merchant: smsTransaction.merchant,
+                type: smsTransaction.isIncome ? "income" : "expense"
+            )
+            parsingError = nil
+            
             withAnimation(.easeInOut(duration: 0.3)) {
                 showingPreview = true
             }
-        } else {
+            
+        case .failure(let error, let partialData):
             parsedTransaction = nil
+            parsingError = error.localizedDescription
+            
             withAnimation(.easeInOut(duration: 0.3)) {
                 showingPreview = false
+            }
+            
+            // Log partial data for debugging
+            if let partialData = partialData {
+                print("SMS Parsing failed with partial data: \(partialData)")
             }
         }
     }
@@ -197,29 +236,38 @@ struct AddTransactionView: View {
     private func saveTransaction() {
         guard let parsed = parsedTransaction else { return }
         
-        let transaction = Transaction(
-            amount: parsed.amount,
-            merchant: parsed.merchant,
-            category: selectedCategory,
-            date: Date(),
-            notes: notes,
-            type: parsed.type,
-            originalSMS: smsText
-        )
+        // Parse the SMS again to get full transaction details
+        let parser = SimpleSMSParser()
+        let result = parser.parseMessage(smsText)
         
-        modelContext.insert(transaction)
-        
-        do {
-            try modelContext.save()
-            showingSaveAlert = true
-        } catch {
+        switch result {
+        case .success(let smsTransaction):
+            let transaction = smsConverter.convertToTransaction(smsTransaction, categories: categories)
+            
+            // Override with user selections
+            if let selectedCategory = selectedCategory {
+                transaction.category = selectedCategory
+            }
+            if !notes.isEmpty {
+                transaction.notes = notes
+            }
+            
+            do {
+                modelContext.insert(transaction)
+                try modelContext.save()
+                showingSaveAlert = true
+            } catch {
+                parsingError = "Failed to save transaction: \(error.localizedDescription)"
+            }
+            
+        case .failure(let error, _):
             print("Failed to save transaction: \(error)")
         }
     }
 }
 
 struct CategoryTag: View {
-    let category: TransactionCategory
+    let category: Category
     let isSelected: Bool
     let action: () -> Void
     
@@ -228,13 +276,13 @@ struct CategoryTag: View {
             HStack(spacing: CTSpacing.xs) {
                 Image(systemName: category.icon)
                     .font(.caption)
-                Text(category.rawValue)
+                Text(category.name)
                     .font(.caption)
                     .fontWeight(.medium)
             }
             .padding(.horizontal, CTSpacing.md)
             .padding(.vertical, CTSpacing.sm)
-            .background(isSelected ? category.color : Color.secondaryBackground)
+            .background(isSelected ? category.swiftUIColor : Color.secondaryBackground)
             .foregroundColor(isSelected ? .white : .textPrimary)
             .cornerRadius(CTCornerRadius.input)
             .overlay(
@@ -248,5 +296,4 @@ struct CategoryTag: View {
 
 #Preview {
     AddTransactionView()
-        .modelContainer(for: Transaction.self, inMemory: true)
 }

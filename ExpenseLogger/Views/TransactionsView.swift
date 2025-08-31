@@ -10,11 +10,19 @@ import SwiftData
 
 struct TransactionsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var allTransactions: [Transaction]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
+    
+    private func formatAmount(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "KES"
+        return formatter.string(from: amount as NSDecimalNumber) ?? "0"
+    }
+    @Query(sort: \Category.name) private var categories: [Category]
     
     @State private var searchText: String = ""
     @State private var selectedSortOption: SortOption = .dateDescending
-    @State private var selectedCategoryFilter: TransactionCategory? = nil
+    @State private var selectedCategoryFilter: Category? = nil
     @State private var showingFilters = false
     
     enum SortOption: String, CaseIterable {
@@ -37,20 +45,20 @@ struct TransactionsView: View {
     }
     
     private var filteredAndSortedTransactions: [Transaction] {
-        var transactions = allTransactions
+        var transactions = Array(self.transactions)
         
         // Apply search filter
         if !searchText.isEmpty {
             transactions = transactions.filter { transaction in
                 transaction.merchant.localizedCaseInsensitiveContains(searchText) ||
-                transaction.notes.localizedCaseInsensitiveContains(searchText) ||
-                transaction.category.rawValue.localizedCaseInsensitiveContains(searchText)
+                (transaction.notes?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                (transaction.category?.name.localizedCaseInsensitiveContains(searchText) ?? false)
             }
         }
         
         // Apply category filter
-        if let categoryFilter = selectedCategoryFilter {
-            transactions = transactions.filter { $0.category == categoryFilter }
+        if let selectedCategory = selectedCategoryFilter {
+            transactions = transactions.filter { $0.category == selectedCategory }
         }
         
         // Apply sorting
@@ -73,14 +81,15 @@ struct TransactionsView: View {
     private var groupedTransactions: [(String, [Transaction])] {
         let calendar = Calendar.current
         let grouped = Dictionary(grouping: filteredAndSortedTransactions) { transaction in
-            if calendar.isDateInToday(transaction.date) {
+            let date = transaction.date
+            if calendar.isDateInToday(date) {
                 return "Today"
-            } else if calendar.isDateInYesterday(transaction.date) {
+            } else if calendar.isDateInYesterday(date) {
                 return "Yesterday"
             } else {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "MMM dd, yyyy"
-                return formatter.string(from: transaction.date)
+                return formatter.string(from: date)
             }
         }
         
@@ -186,17 +195,17 @@ struct TransactionsView: View {
                         .cornerRadius(CTCornerRadius.input)
                 }
                 
-                ForEach(TransactionCategory.allCases.filter { $0 != .uncategorized }) { category in
+                ForEach(categories, id: \.id) { category in
                     Button(action: { selectedCategoryFilter = category }) {
                         HStack(spacing: CTSpacing.xs) {
-                            Image(systemName: category.icon)
-                            Text(category.rawValue)
+                            Image(systemName: category.icon ?? "tag")
+                            Text(category.name ?? "Unknown")
                         }
                         .font(.caption)
                         .padding(.horizontal, CTSpacing.md)
                         .padding(.vertical, CTSpacing.sm)
-                        .background(selectedCategoryFilter == category ? category.color : Color.secondaryBackground)
-                        .foregroundColor(selectedCategoryFilter == category ? .white : .textPrimary)
+                        .background(selectedCategoryFilter?.id == category.id ? Color(hex: category.color ?? "#6B7280") : Color.secondaryBackground)
+                        .foregroundColor(selectedCategoryFilter?.id == category.id ? .white : .textPrimary)
                         .cornerRadius(CTCornerRadius.input)
                     }
                 }
@@ -275,13 +284,20 @@ struct TransactionListRow: View {
     let transaction: Transaction
     let onTap: () -> Void
     
+    private func formatAmount(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "KES"
+        return formatter.string(from: amount as NSDecimalNumber) ?? "0"
+    }
+    
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: CTSpacing.md) {
                 // Category Icon
-                Image(systemName: transaction.category.icon)
+                Image(systemName: transaction.category?.icon ?? "tag")
                     .font(.title2)
-                    .foregroundColor(transaction.category.color)
+                    .foregroundColor(transaction.category?.swiftUIColor ?? .gray)
                     .frame(width: 32, height: 32)
                 
                 // Transaction Details
@@ -292,16 +308,16 @@ struct TransactionListRow: View {
                         .lineLimit(1)
                     
                     HStack(spacing: CTSpacing.xs) {
-                        Text(transaction.timeOnly)
+                        Text(transaction.date.formatted(date: .abbreviated, time: .omitted))
                             .font(.caption)
                             .foregroundColor(.textSecondary)
                         
-                        if !transaction.notes.isEmpty {
+                        if let notes = transaction.notes, !notes.isEmpty {
                             Text("•")
                                 .font(.caption)
                                 .foregroundColor(.textSecondary)
                             
-                            Text(transaction.notes)
+                            Text(notes)
                                 .font(.caption)
                                 .foregroundColor(.textSecondary)
                                 .lineLimit(1)
@@ -313,11 +329,11 @@ struct TransactionListRow: View {
                 
                 // Amount and Category
                 VStack(alignment: .trailing, spacing: CTSpacing.xs) {
-                    Text(transaction.type == .income ? "+\(transaction.formattedAmount)" : "-\(transaction.formattedAmount)")
+                    Text(transaction.isIncome ? "+\(self.formatAmount(transaction.amount))" : "-\(self.formatAmount(transaction.amount))")
                         .font(.headline)
-                        .foregroundColor(transaction.type == .income ? .successColor : .textPrimary)
+                        .foregroundColor(transaction.isIncome ? .successColor : .textPrimary)
                     
-                    Text(transaction.category.rawValue)
+                    Text(transaction.category?.name ?? "Uncategorized")
                         .font(.caption)
                         .foregroundColor(.textSecondary)
                 }
@@ -342,5 +358,4 @@ struct TransactionListRow: View {
 
 #Preview {
     TransactionsView()
-        .modelContainer(for: Transaction.self, inMemory: true)
 }

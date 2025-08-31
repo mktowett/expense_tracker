@@ -10,10 +10,10 @@ import SwiftData
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var transactions: [Transaction]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     
     @State private var selectedCurrency = "KES"
-    @State private var defaultCategory: TransactionCategory = .uncategorized
+    @State private var defaultCategory: String = "Uncategorized"
     @State private var budgetAlertsEnabled = true
     @State private var notificationsEnabled = true
     @State private var showingClearDataAlert = false
@@ -22,191 +22,66 @@ struct SettingsView: View {
     
     private let currencies = ["KES", "USD", "EUR", "GBP", "JPY"]
     
+    var headerSection: some View {
+        VStack(alignment: .leading, spacing: CTSpacing.sm) {
+            CTTextStyle.titleLarge("Settings")
+            CTTextStyle.caption("Customize your expense tracking experience")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .claudeScreenPadding()
+    }
+    
+    var appInfoSection: some View {
+        CTCard {
+            VStack(alignment: .leading, spacing: CTSpacing.md) {
+                HStack(spacing: CTSpacing.md) {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(.accentColor)
+                    
+                    VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                        CTTextStyle.headline("ExpenseLogger")
+                        CTTextStyle.caption("Version 1.0.0")
+                        CTTextStyle.caption("\(transactions.count) transactions tracked")
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .claudeScreenPadding()
+    }
+    
+    var categoriesSection: some View {
+        CTCard {
+            VStack(alignment: .leading, spacing: CTSpacing.md) {
+                CTTextStyle.headline("Categories")
+                
+                VStack(spacing: 0) {
+                    SettingsRow(
+                        title: "Manage Categories",
+                        value: "",
+                        hasChevron: true
+                    ) {
+                        showingCategoriesSheet = true
+                    }
+                }
+            }
+        }
+        .claudeScreenPadding()
+    }
+    
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: CTSpacing.lg) {
-                    // Header
-                    VStack(alignment: .leading, spacing: CTSpacing.sm) {
-                        CTTextStyle.titleLarge("Settings")
-                        CTTextStyle.caption("Customize your expense tracking experience")
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .claudeScreenPadding()
+                    headerSection
+                    appInfoSection
+                    categoriesSection
                     
-                    // App Info Section
-                    CTCard {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            HStack(spacing: CTSpacing.md) {
-                                Image(systemName: "dollarsign.circle.fill")
-                                    .font(.system(size: 48))
-                                    .foregroundColor(.accentColor)
-                                
-                                VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                    CTTextStyle.headline("ExpenseLogger")
-                                    CTTextStyle.caption("Version 1.0.0")
-                                    CTTextStyle.caption("\(transactions.count) transactions tracked")
-                                }
-                                
-                                Spacer()
-                            }
-                        }
-                    }
-                    .claudeScreenPadding()
-                    
-                    // Categories Management
-                    CTCard {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            CTTextStyle.headline("Categories")
-                            
-                            VStack(spacing: 0) {
-                                SettingsRow(
-                                    title: "Manage Categories",
-                                    value: "",
-                                    hasChevron: true
-                                ) {
-                                    showingCategoriesSheet = true
-                                }
-                                
-                                Divider()
-                                    .padding(.vertical, CTSpacing.xs)
-                                
-                                HStack {
-                                    Text("Default Category")
-                                        .font(.body)
-                                        .foregroundColor(.textPrimary)
-                                    
-                                    Spacer()
-                                    
-                                    Menu {
-                                        ForEach(TransactionCategory.allCases) { category in
-                                            Button(action: { defaultCategory = category }) {
-                                                HStack {
-                                                    Image(systemName: category.icon)
-                                                    Text(category.rawValue)
-                                                    if defaultCategory == category {
-                                                        Image(systemName: "checkmark")
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } label: {
-                                        HStack(spacing: CTSpacing.xs) {
-                                            Image(systemName: defaultCategory.icon)
-                                                .foregroundColor(defaultCategory.color)
-                                            Text(defaultCategory.rawValue)
-                                                .foregroundColor(.textSecondary)
-                                            Image(systemName: "chevron.down")
-                                                .font(.caption)
-                                                .foregroundColor(.textSecondary)
-                                        }
-                                    }
-                                }
-                                .padding(.vertical, CTSpacing.xs)
-                            }
-                        }
-                    }
-                    .claudeScreenPadding()
-                    
-                    // Preferences Section
-                    CTCard {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            CTTextStyle.headline("Preferences")
-                            
-                            VStack(spacing: 0) {
-                                HStack {
-                                    Text("Currency")
-                                        .font(.body)
-                                        .foregroundColor(.textPrimary)
-                                    
-                                    Spacer()
-                                    
-                                    Menu {
-                                        ForEach(currencies, id: \.self) { currency in
-                                            Button(action: { selectedCurrency = currency }) {
-                                                HStack {
-                                                    Text(currency)
-                                                    if selectedCurrency == currency {
-                                                        Image(systemName: "checkmark")
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } label: {
-                                        HStack(spacing: CTSpacing.xs) {
-                                            Text(selectedCurrency)
-                                                .foregroundColor(.textSecondary)
-                                            Image(systemName: "chevron.down")
-                                                .font(.caption)
-                                                .foregroundColor(.textSecondary)
-                                        }
-                                    }
-                                }
-                                .padding(.vertical, CTSpacing.xs)
-                                
-                                Divider()
-                                    .padding(.vertical, CTSpacing.xs)
-                                
-                                HStack {
-                                    Text("Budget Alerts")
-                                        .font(.body)
-                                        .foregroundColor(.textPrimary)
-                                    
-                                    Spacer()
-                                    
-                                    Toggle("", isOn: $budgetAlertsEnabled)
-                                        .labelsHidden()
-                                }
-                                .padding(.vertical, CTSpacing.xs)
-                                
-                                Divider()
-                                    .padding(.vertical, CTSpacing.xs)
-                                
-                                HStack {
-                                    Text("Notifications")
-                                        .font(.body)
-                                        .foregroundColor(.textPrimary)
-                                    
-                                    Spacer()
-                                    
-                                    Toggle("", isOn: $notificationsEnabled)
-                                        .labelsHidden()
-                                }
-                                .padding(.vertical, CTSpacing.xs)
-                            }
-                        }
-                    }
-                    .claudeScreenPadding()
-                    
-                    // Data Management Section
-                    CTCard {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            CTTextStyle.headline("Data & Privacy")
-                            
-                            VStack(spacing: 0) {
-                                SettingsRow(
-                                    title: "Export Data",
-                                    value: "CSV, JSON",
-                                    hasChevron: true
-                                ) {
-                                    showingExportSheet = true
-                                }
-                                
-                                Divider()
-                                    .padding(.vertical, CTSpacing.xs)
-                                
-                                SettingsRow(
-                                    title: "Clear All Data",
-                                    value: "",
-                                    hasChevron: true,
-                                    isDestructive: true
-                                ) {
-                                    showingClearDataAlert = true
-                                }
-                            }
-                        }
-                    }
-                    .claudeScreenPadding()
+                    Text("Settings functionality will be implemented in future updates")
+                        .foregroundColor(.textSecondary)
+                        .padding()
                     
                     // About Section
                     CTCard {
@@ -274,7 +149,10 @@ struct SettingsView: View {
     
     private func clearAllData() {
         do {
-            try modelContext.delete(model: Transaction.self)
+            // Delete all transactions using SwiftData
+            for transaction in transactions {
+                modelContext.delete(transaction)
+            }
             try modelContext.save()
         } catch {
             print("Failed to clear data: \(error)")
@@ -411,12 +289,12 @@ struct CategoriesManagementView: View {
                 CTTextStyle.headline("Available Categories")
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: CTSpacing.md) {
-                    ForEach(TransactionCategory.allCases) { category in
+                    ForEach(Category.createDefaultCategories(), id: \.id) { category in
                         HStack(spacing: CTSpacing.sm) {
                             Image(systemName: category.icon)
-                                .foregroundColor(category.color)
+                                .foregroundColor(category.swiftUIColor)
                             
-                            Text(category.rawValue)
+                            Text(category.name)
                                 .font(.body)
                                 .foregroundColor(.textPrimary)
                             
@@ -434,5 +312,4 @@ struct CategoriesManagementView: View {
 
 #Preview {
     SettingsView()
-        .modelContainer(for: Transaction.self, inMemory: true)
 }

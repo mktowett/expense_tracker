@@ -2,82 +2,73 @@
 //  Transaction.swift
 //  ExpenseLogger
 //
-//  Created by marvin towett on 30/08/2025.
+//  Created by marvin towett on 31/08/2025.
 //
 
 import Foundation
 import SwiftData
 
-enum TransactionType: String, CaseIterable, Codable {
-    case expense = "Expense"
-    case income = "Income"
-}
-
 @Model
 final class Transaction {
     var id: UUID
-    var amount: Double
+    var amount: Decimal
+    var currency: String
+    var transactionType: TransactionType
     var merchant: String
-    private var categoryRawValue: String
     var date: Date
-    var notes: String
-    private var typeRawValue: String
-    var originalSMS: String?
+    var reference: String?
+    var source: SMSSource?
+    var rawMessage: String?
+    var fees: Decimal
+    var isIncome: Bool
+    var notes: String?
+    var createdAt: Date
+    var updatedAt: Date
     
-    var category: TransactionCategory {
-        get { TransactionCategory(rawValue: categoryRawValue) ?? .uncategorized }
-        set { categoryRawValue = newValue.rawValue }
-    }
-    
-    var type: TransactionType {
-        get { TransactionType(rawValue: typeRawValue) ?? .expense }
-        set { typeRawValue = newValue.rawValue }
-    }
+    // Relationship
+    var category: Category?
     
     init(
-        id: UUID = UUID(),
-        amount: Double,
+        amount: Decimal,
+        currency: String = "KES",
+        transactionType: TransactionType,
         merchant: String,
-        category: TransactionCategory = .uncategorized,
-        date: Date = Date(),
-        notes: String = "",
-        type: TransactionType,
-        originalSMS: String? = nil
+        date: Date,
+        reference: String? = nil,
+        source: SMSSource? = nil,
+        rawMessage: String? = nil,
+        fees: Decimal = 0.0,
+        isIncome: Bool = false,
+        notes: String? = nil,
+        category: Category? = nil
     ) {
-        self.id = id
+        self.id = UUID()
         self.amount = amount
+        self.currency = currency
+        self.transactionType = transactionType
         self.merchant = merchant
-        self.categoryRawValue = category.rawValue
         self.date = date
+        self.reference = reference
+        self.source = source
+        self.rawMessage = rawMessage
+        self.fees = fees
+        self.isIncome = isIncome
         self.notes = notes
-        self.typeRawValue = type.rawValue
-        self.originalSMS = originalSMS
+        self.category = category
+        self.createdAt = Date()
+        self.updatedAt = Date()
     }
-    
-    var formattedAmount: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "KES"
-        formatter.currencySymbol = "KES "
-        return formatter.string(from: NSNumber(value: amount)) ?? "KES 0.00"
-    }
-    
-    var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
-    }
-    
-    var shortDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM dd"
-        return formatter.string(from: date)
-    }
-    
-    var timeOnly: String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
-    }
+}
+
+// MARK: - Enums
+enum TransactionType: String, Codable, CaseIterable {
+    case income = "income"
+    case expense = "expense"
+}
+
+enum SMSSource: String, Codable, CaseIterable {
+    case mpesa = "mpesa"
+    case loop = "loop"
+    case imBank = "imBank"
+    case pesaLink = "pesaLink"
 }

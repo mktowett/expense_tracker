@@ -10,7 +10,14 @@ import SwiftData
 
 struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var transactions: [Transaction]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
+    
+    private func formatAmount(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "KES"
+        return formatter.string(from: amount as NSDecimalNumber) ?? "0"
+    }
     @State private var showingAddTransaction = false
     
     private var currentMonth: String {
@@ -25,8 +32,8 @@ struct DashboardView: View {
         let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start ?? now
         
         return transactions
-            .filter { $0.date >= startOfMonth && $0.type == .expense }
-            .reduce(0) { $0 + $1.amount }
+            .filter { $0.date >= startOfMonth && !$0.isIncome }
+            .reduce(0) { $0 + NSDecimalNumber(decimal: $1.amount).doubleValue }
     }
     
     private var monthlyIncome: Double {
@@ -35,8 +42,8 @@ struct DashboardView: View {
         let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start ?? now
         
         return transactions
-            .filter { $0.date >= startOfMonth && $0.type == .income }
-            .reduce(0) { $0 + $1.amount }
+            .filter { $0.date >= startOfMonth && $0.isIncome }
+            .reduce(0) { $0 + NSDecimalNumber(decimal: $1.amount).doubleValue }
     }
     
     private var transactionCount: Int {
@@ -47,15 +54,17 @@ struct DashboardView: View {
         return transactions.filter { $0.date >= startOfMonth }.count
     }
     
-    private var topCategory: TransactionCategory? {
+    private var topCategory: Category? {
         let calendar = Calendar.current
         let now = Date()
         let startOfMonth = calendar.dateInterval(of: .month, for: now)?.start ?? now
         
-        let monthlyTransactions = transactions.filter { $0.date >= startOfMonth && $0.type == .expense }
+        let monthlyTransactions = transactions.filter { $0.date >= startOfMonth && !$0.isIncome }
         
         let categoryTotals = Dictionary(grouping: monthlyTransactions, by: { $0.category })
-            .mapValues { $0.reduce(0) { $0 + $1.amount } }
+            .compactMapValues { transactions in
+                transactions.reduce(0) { $0 + NSDecimalNumber(decimal: $1.amount).doubleValue }
+            }
         
         return categoryTotals.max(by: { $0.value < $1.value })?.key
     }
@@ -70,7 +79,7 @@ struct DashboardView: View {
     }
     
     private var recentTransactions: [Transaction] {
-        Array(transactions.sorted(by: { $0.date > $1.date }).prefix(5))
+        Array(transactions.prefix(5))
     }
     
     var body: some View {
@@ -128,9 +137,9 @@ struct DashboardView: View {
                             VStack(alignment: .leading, spacing: CTSpacing.xs) {
                                 HStack(spacing: CTSpacing.xs) {
                                     if let category = topCategory {
-                                        Image(systemName: category.icon)
-                                            .foregroundColor(category.color)
-                                        Text(category.rawValue)
+                                        Image(systemName: category.icon ?? "tag")
+                                            .foregroundColor(Color(hex: category.color ?? "#6B7280"))
+                                        Text(category.name ?? "Unknown")
                                             .font(.claudeHeadline)
                                             .foregroundColor(.textPrimary)
                                     } else {
@@ -216,23 +225,13 @@ struct DashboardView: View {
             AddTransactionView()
         }
         .onAppear {
-            // Add mock data if no transactions exist
+            // Initialize default categories if needed
             if transactions.isEmpty {
-                addMockData()
+                let defaultCategories = Category.createDefaultCategories()
+                for category in defaultCategories {
+                    modelContext.insert(category)
+                }
             }
-        }
-    }
-    
-    private func addMockData() {
-        let mockTransactions = MockData.createMockTransactions()
-        for transaction in mockTransactions {
-            modelContext.insert(transaction)
-        }
-        
-        do {
-            try modelContext.save()
-        } catch {
-            print("Failed to save mock data: \(error)")
         }
     }
 }
@@ -240,13 +239,20 @@ struct DashboardView: View {
 struct TransactionRow: View {
     let transaction: Transaction
     
+    private func formatAmount(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "KES"
+        return formatter.string(from: amount as NSDecimalNumber) ?? "0"
+    }
+    
     var body: some View {
         HStack(spacing: CTSpacing.md) {
             // Category Icon
-            Image(systemName: transaction.category.icon)
-                .font(.title3)
-                .foregroundColor(transaction.category.color)
-                .frame(width: 24, height: 24)
+            Image(systemName: transaction.category?.icon ?? "questionmark.circle")
+                .font(.title2)
+                .foregroundColor(transaction.category?.swiftUIColor ?? .gray)
+                .frame(width: 32, height: 32)
             
             // Transaction Details
             VStack(alignment: .leading, spacing: CTSpacing.xs) {
@@ -256,17 +262,20 @@ struct TransactionRow: View {
                     .lineLimit(1)
                 
                 HStack(spacing: CTSpacing.xs) {
-                    Text(transaction.shortDate)
+                    Text(transaction.date.formatted(date: .abbreviated, time: .omitted))
                         .font(.caption)
                         .foregroundColor(.textSecondary)
                     
-                    Text("•")
-                        .font(.caption)
-                        .foregroundColor(.textSecondary)
-                    
-                    Text(transaction.timeOnly)
-                        .font(.caption)
-                        .foregroundColor(.textSecondary)
+                    if let notes = transaction.notes, !notes.isEmpty {
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+                        
+                        Text(notes)
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+                            .lineLimit(1)
+                    }
                 }
             }
             
@@ -274,13 +283,15 @@ struct TransactionRow: View {
             
             // Amount
             VStack(alignment: .trailing, spacing: CTSpacing.xs) {
-                Text(transaction.type == .income ? "+\(transaction.formattedAmount)" : "-\(transaction.formattedAmount)")
+                Text(transaction.isIncome ? "+\(formatAmount(transaction.amount))" : "-\(formatAmount(transaction.amount))")
                     .font(.headline)
-                    .foregroundColor(transaction.type == .income ? .successColor : .textPrimary)
+                    .foregroundColor(transaction.isIncome ? .successColor : .textPrimary)
                 
-                Text(transaction.category.rawValue)
-                    .font(.caption)
-                    .foregroundColor(.textSecondary)
+                if let category = transaction.category {
+                    Text(category.name)
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
+                }
             }
         }
         .padding(.vertical, CTSpacing.sm)
@@ -290,5 +301,4 @@ struct TransactionRow: View {
 
 #Preview {
     DashboardView()
-        .modelContainer(for: Transaction.self, inMemory: true)
 }
