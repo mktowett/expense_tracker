@@ -17,14 +17,15 @@ extension Font {
     static let claudeCaption = Font.system(size: 12, weight: .regular, design: .default)
     static let claudeSmall = Font.system(size: 11, weight: .regular, design: .default)
     
-    // MARK: - Dashboard-specific Typography
-    static let balanceAmount = Font.system(size: 32, weight: .semibold, design: .default)
+    // MARK: - Dashboard-specific Typography (Premium Hierarchy)
+    static let balanceAmount = Font.system(size: 24, weight: .semibold, design: .default)
     static let balanceLabel = Font.system(size: 14, weight: .medium, design: .default)
-    static let statsAmount = Font.system(size: 18, weight: .semibold, design: .default)
+    static let statsAmount = Font.system(size: 16, weight: .semibold, design: .default)
     static let statsLabel = Font.system(size: 12, weight: .medium, design: .default)
-    static let merchantName = Font.system(size: 15, weight: .medium, design: .default)
+    static let merchantName = Font.system(size: 16, weight: .medium, design: .default)
+    static let transactionAmount = Font.system(size: 16, weight: .semibold, design: .default)
     static let transactionDate = Font.system(size: 12, weight: .regular, design: .default)
-    static let transactionType = Font.system(size: 11, weight: .regular, design: .default)
+    static let transactionType = Font.system(size: 12, weight: .regular, design: .default)
 }
 
 // MARK: - Claude-inspired Text Styles

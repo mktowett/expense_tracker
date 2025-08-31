@@ -18,16 +18,16 @@ extension Color {
     static let textSecondary = Color(light: "#6B7280", dark: "#B3B3B3")
     static let textTertiary = Color(light: "#9CA3AF", dark: "#999999")
     
-    // MARK: - Claude-inspired Accent Colors
-    static let accentColor = Color(hex: "#D97706")  // Claude's warm orange
-    static let accentSecondary = Color(hex: "#F59E0B")
+    // MARK: - Minimal Accent Colors (Reduced Usage)
+    static let accentColor = Color(hex: "#6B7280")  // Neutral for buttons
+    static let accentSecondary = Color(hex: "#6B7280")
     static let borderColor = Color(light: "#E1E1E6", dark: "#666666")
     static let borderLight = Color(light: "#EEEEEF", dark: "#595959")
     
-    // MARK: - Claude-inspired Status Colors
-    static let successColor = Color(hex: "#10B981")  // Softer green
-    static let errorColor = Color(hex: "#EF4444")    // Softer red
-    static let warningColor = Color(hex: "#D97706")
+    // MARK: - Minimal Status Colors (Only for Amounts)
+    static let successColor = Color(hex: "#10B981")  // Green for positive amounts only
+    static let errorColor = Color(hex: "#EF4444")    // Red for negative amounts only
+    static let warningColor = Color(hex: "#6B7280")  // Neutral gray instead of orange
     
     // MARK: - Card System Colors
     static let cardBackground = Color(light: "#F8F9FA", dark: "#2A2A2A")
@@ -40,8 +40,8 @@ extension Color {
     static let focusRing = Color(hex: "#D97706").opacity(0.3)
     
     // MARK: - Monochromatic Icon System
-    static let iconPrimary = Color(hex: "#8B949E")  // Neutral gray for all icons
-    static let iconSecondary = Color(hex: "#8B949E").opacity(0.7)  // Subtle variation
+    static let iconPrimary = Color(hex: "#6B7280")  // Unified neutral gray for all icons
+    static let iconSecondary = Color(hex: "#6B7280").opacity(0.7)  // Subtle variation
     static let iconBackground = Color.clear  // Transparent backgrounds
     
     // MARK: - Light/Dark Mode Helper

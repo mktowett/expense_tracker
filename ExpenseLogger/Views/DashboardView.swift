@@ -249,7 +249,7 @@ struct DashboardView: View {
                             VStack(spacing: 0) {
                                 ForEach(Array(recentTransactions.enumerated()), id: \.element.id) { index, transaction in
                                     TransactionRow(transaction: transaction)
-                                        .padding(.vertical, CTSpacing.lg)
+                                        .padding(.vertical, CTSpacing.md)
                                     
                                     if index < recentTransactions.count - 1 {
                                         Divider()
@@ -341,7 +341,7 @@ struct TransactionRow: View {
             // Amount and Balance Info
             VStack(alignment: .trailing, spacing: CTSpacing.xs) {
                 Text(transaction.isIncome ? "+\(formatAmount(transaction.amount))" : "-\(formatAmount(transaction.amount))")
-                    .font(.statsAmount)
+                    .font(.transactionAmount)
                     .foregroundColor(transaction.isIncome ? .successColor : .errorColor)
                 
                 if transaction.fees > 0 {
