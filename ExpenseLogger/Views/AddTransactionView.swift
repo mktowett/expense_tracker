@@ -20,8 +20,11 @@ struct AddTransactionView: View {
     @State private var selectedCategory: Category?
     @State private var notes: String = ""
     @State private var showingSaveAlert: Bool = false
+    @State private var reconciliationResult: BalanceReconciliationResult?
+    @State private var showingReconciliationAlert: Bool = false
     
     @Query(sort: \Category.name) private var categories: [Category]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     
     private let smsConverter = SMSTransactionConverter()
     
@@ -77,6 +80,17 @@ struct AddTransactionView: View {
             }
         } message: {
             Text("Your transaction has been saved successfully.")
+        }
+        .alert("Balance Updated", isPresented: $showingReconciliationAlert) {
+            Button("OK") {
+                dismiss()
+            }
+        } message: {
+            if let result = reconciliationResult {
+                Text("Transaction saved and \(result.affectedCount) subsequent transactions updated to maintain balance consistency.")
+            } else {
+                Text("Transaction saved with balance reconciliation.")
+            }
         }
     }
     
@@ -252,16 +266,25 @@ struct AddTransactionView: View {
                 transaction.notes = notes
             }
             
-            do {
-                modelContext.insert(transaction)
-                try modelContext.save()
+            // Use BalanceReconciler for chronological insertion
+            let reconciliationResult = BalanceReconciler.insertTransactionChronologically(
+                transaction,
+                into: transactions,
+                modelContext: modelContext
+            )
+            
+            // Store result for user feedback
+            self.reconciliationResult = reconciliationResult
+            
+            // Show appropriate alert based on whether balances were affected
+            if reconciliationResult.affectedCount > 0 {
+                showingReconciliationAlert = true
+            } else {
                 showingSaveAlert = true
-            } catch {
-                parsingError = "Failed to save transaction: \(error.localizedDescription)"
             }
             
         case .failure(let error, _):
-            print("Failed to save transaction: \(error)")
+            parsingError = "Failed to save transaction: \(error.localizedDescription)"
         }
     }
 }
@@ -282,8 +305,8 @@ struct CategoryTag: View {
             }
             .padding(.horizontal, CTSpacing.md)
             .padding(.vertical, CTSpacing.sm)
-            .background(isSelected ? category.swiftUIColor : Color.secondaryBackground)
-            .foregroundColor(isSelected ? .white : .textPrimary)
+            .background(isSelected ? Color.activeBackground : Color.secondaryBackground)
+            .foregroundColor(.textPrimary)
             .cornerRadius(CTCornerRadius.input)
             .overlay(
                 RoundedRectangle(cornerRadius: CTCornerRadius.input)

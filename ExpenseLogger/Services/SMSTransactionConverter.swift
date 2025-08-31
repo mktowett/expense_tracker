@@ -21,7 +21,9 @@ class SMSTransactionConverter {
             fees: smsTransaction.fees ?? 0,
             isIncome: smsTransaction.transactionType == .receive,
             notes: generateNotesFromSMS(smsTransaction),
-            category: category
+            category: category,
+            mpesaBalanceAfter: smsTransaction.mpesaBalanceAfter,
+            mpesaBalanceBefore: smsTransaction.mpesaBalanceBefore
         )
         
         return transaction
@@ -55,46 +57,26 @@ class SMSTransactionConverter {
         
         var categoryName: String
         
-        switch transactionType {
-        case .cardPayment:
-            if merchant.contains("OPENAI") || merchant.contains("CHATGPT") {
-                categoryName = "Other"
-            } else if merchant.contains("RESTAURANT") || merchant.contains("CAFE") || merchant.contains("FOOD") {
-                categoryName = "Food & Dining"
-            } else if merchant.contains("FUEL") || merchant.contains("PETROL") || merchant.contains("GAS") {
-                categoryName = "Transportation"
-            } else {
-                categoryName = "Shopping"
-            }
-            
-        case .payBill:
-            if merchant.contains("LIQUOR") || merchant.contains("BAR") || merchant.contains("CLUB") {
-                categoryName = "Entertainment"
-            } else if merchant.contains("SUPERMARKET") || merchant.contains("STORE") || merchant.contains("SHOP") {
-                categoryName = "Shopping"
-            } else if merchant.contains("HOSPITAL") || merchant.contains("CLINIC") || merchant.contains("PHARMACY") {
-                categoryName = "Healthcare"
-            } else {
-                categoryName = "Bills & Utilities"
-            }
-            
-        case .send:
-            if merchant.contains("RENT") || merchant.contains("LANDLORD") {
-                categoryName = "Bills & Utilities"
-            } else if merchant.contains("SCHOOL") || merchant.contains("UNIVERSITY") || merchant.contains("EDUCATION") {
-                categoryName = "Education"
-            } else {
-                categoryName = "Other"
-            }
-            
-        case .receive:
-            categoryName = "Other"
-            
-        case .bankTransfer:
-            categoryName = "Other"
-            
-        case .unknown:
-            categoryName = "Other"
+        // Map to your specific categories
+        if merchant.contains("UBER") {
+            categoryName = "Uber"
+        } else if merchant.contains("NAIVAS") || merchant.contains("CARREFOUR") || merchant.contains("SUPERMARKET") {
+            categoryName = "Groceries"
+        } else if merchant.contains("KFC") || merchant.contains("JAVA") || merchant.contains("TAKEOUT") || merchant.contains("RESTAURANT") {
+            categoryName = "Takeout"
+        } else if merchant.contains("NETFLIX") || merchant.contains("SPOTIFY") || merchant.contains("SUBSCRIPTION") {
+            categoryName = "Subscriptions"
+        } else if merchant.contains("RENT") || merchant.contains("LANDLORD") {
+            categoryName = "Rent"
+        } else if merchant.contains("KENYA POWER") || merchant.contains("WATER") || merchant.contains("UTILITIES") {
+            categoryName = "Utilities"
+        } else if merchant.contains("CREDIT") || merchant.contains("BANK") || merchant.contains("LOAN") {
+            categoryName = "Credit"
+        } else if transactionType == .receive {
+            // PesaLink and other income
+            categoryName = "Credit" // Income goes to Credit for tracking
+        } else {
+            categoryName = "Shopping" // Default fallback
         }
         
         // Find matching category from provided categories
@@ -114,6 +96,11 @@ class SMSTransactionConverter {
         // Add fees if present
         if let fees = smsTransaction.fees, fees > 0 {
             notes.append("Fees: KES \(fees)")
+        }
+        
+        // Add balance info if available
+        if let balanceAfter = smsTransaction.mpesaBalanceAfter {
+            notes.append("Balance: KES \(balanceAfter)")
         }
         
         return notes.joined(separator: " | ")

@@ -13,12 +13,14 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            DashboardView()
-                .tabItem {
-                    Image(systemName: "chart.pie.fill")
-                    Text("Dashboard")
-                }
-                .tag(0)
+            NavigationStack {
+                DashboardView()
+            }
+            .tabItem {
+                Image(systemName: "chart.pie.fill")
+                Text("Dashboard")
+            }
+            .tag(0)
             
             // Placeholder for Add Transaction tab - will show modal
             Color.clear
@@ -28,19 +30,23 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            TransactionsView()
-                .tabItem {
-                    Image(systemName: "list.bullet")
-                    Text("Transactions")
-                }
-                .tag(2)
+            NavigationStack {
+                TransactionsView()
+            }
+            .tabItem {
+                Image(systemName: "list.bullet")
+                Text("Transactions")
+            }
+            .tag(2)
             
-            SettingsView()
-                .tabItem {
-                    Image(systemName: "gear")
-                    Text("Settings")
-                }
-                .tag(3)
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem {
+                Image(systemName: "gear")
+                Text("Settings")
+            }
+            .tag(3)
         }
         .accentColor(.accentColor)
         .background(Color.primaryBackground)

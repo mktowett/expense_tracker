@@ -292,7 +292,7 @@ struct CategoriesManagementView: View {
                     ForEach(Category.createDefaultCategories(), id: \.id) { category in
                         HStack(spacing: CTSpacing.sm) {
                             Image(systemName: category.icon)
-                                .foregroundColor(category.swiftUIColor)
+                                .foregroundColor(.iconPrimary)
                             
                             Text(category.name)
                                 .font(.body)

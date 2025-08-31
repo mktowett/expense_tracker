@@ -44,6 +44,8 @@ struct SMSTransaction {
     let fees: Decimal?
     let accountNumber: String?
     let phoneNumber: String?
+    let mpesaBalanceAfter: Decimal?
+    let mpesaBalanceBefore: Decimal?
     
     var isIncome: Bool {
         return transactionType.isIncome
@@ -60,7 +62,9 @@ struct SMSTransaction {
         rawMessage: String,
         fees: Decimal? = nil,
         accountNumber: String? = nil,
-        phoneNumber: String? = nil
+        phoneNumber: String? = nil,
+        mpesaBalanceAfter: Decimal? = nil,
+        mpesaBalanceBefore: Decimal? = nil
     ) {
         self.id = UUID().uuidString
         self.amount = amount
@@ -74,6 +78,8 @@ struct SMSTransaction {
         self.fees = fees
         self.accountNumber = accountNumber
         self.phoneNumber = phoneNumber
+        self.mpesaBalanceAfter = mpesaBalanceAfter
+        self.mpesaBalanceBefore = mpesaBalanceBefore
     }
 }
 

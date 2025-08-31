@@ -35,8 +35,8 @@ struct CTSpacing {
 
 // MARK: - Claude-inspired Corner Radius
 struct CTCornerRadius {
-    static let standard: CGFloat = 8  // Claude's consistent radius
-    static let card: CGFloat = 8
+    static let standard: CGFloat = 12  // Claude's consistent radius
+    static let card: CGFloat = 12
     static let input: CGFloat = 8
 }
 
@@ -44,5 +44,6 @@ struct CTCornerRadius {
 struct CTShadow {
     // Claude uses very subtle shadows or none at all
     static let none = (offset: CGSize.zero, radius: CGFloat(0), opacity: 0.0)
-    static let subtle = (offset: CGSize(width: 0, height: 1), radius: CGFloat(2), opacity: 0.05)
+    static let subtle = (offset: CGSize(width: 0, height: 1), radius: CGFloat(3), opacity: 0.1)
+    static let card = (offset: CGSize(width: 0, height: 1), radius: CGFloat(3), opacity: 0.1)
 }

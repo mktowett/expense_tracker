@@ -39,14 +39,14 @@ final class Category {
     // Static method to create default categories
     static func createDefaultCategories() -> [Category] {
         return [
-            Category(name: "Food & Dining", color: "#F59E0B", icon: "fork.knife", isDefault: true),
-            Category(name: "Transportation", color: "#3B82F6", icon: "car.fill", isDefault: true),
-            Category(name: "Shopping", color: "#EC4899", icon: "bag.fill", isDefault: true),
-            Category(name: "Entertainment", color: "#8B5CF6", icon: "tv.fill", isDefault: true),
-            Category(name: "Bills & Utilities", color: "#EF4444", icon: "bolt.fill", isDefault: true),
-            Category(name: "Healthcare", color: "#10B981", icon: "heart.fill", isDefault: true),
-            Category(name: "Education", color: "#6366F1", icon: "book.fill", isDefault: true),
-            Category(name: "Other", color: "#6B7280", icon: "questionmark.circle.fill", isDefault: true)
+            Category(name: "Groceries", color: "#8B949E", icon: "cart", isDefault: true),
+            Category(name: "Uber", color: "#8B949E", icon: "car", isDefault: true),
+            Category(name: "Credit", color: "#8B949E", icon: "creditcard", isDefault: true),
+            Category(name: "Takeout", color: "#8B949E", icon: "takeoutbag.and.cup.and.straw", isDefault: true),
+            Category(name: "Shopping", color: "#8B949E", icon: "bag", isDefault: true),
+            Category(name: "Rent", color: "#8B949E", icon: "house", isDefault: true),
+            Category(name: "Utilities", color: "#8B949E", icon: "bolt", isDefault: true),
+            Category(name: "Subscriptions", color: "#8B949E", icon: "repeat.circle", isDefault: true)
         ]
     }
 }

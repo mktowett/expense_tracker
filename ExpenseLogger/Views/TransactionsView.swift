@@ -103,17 +103,15 @@ struct TransactionsView: View {
     }
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                searchAndFilterSection
-                transactionListSection
-            }
-            .claudeScreenBackground()
-            .navigationTitle("Transactions")
-            .navigationBarTitleDisplayMode(.large)
-            .refreshable {
-                // Pull to refresh
-            }
+        VStack(spacing: 0) {
+            searchAndFilterSection
+            transactionListSection
+        }
+        .claudeScreenBackground()
+        .navigationTitle("Transactions")
+        .navigationBarTitleDisplayMode(.large)
+        .refreshable {
+            // Pull to refresh
         }
     }
     
@@ -297,7 +295,7 @@ struct TransactionListRow: View {
                 // Category Icon
                 Image(systemName: transaction.category?.icon ?? "tag")
                     .font(.title2)
-                    .foregroundColor(transaction.category?.swiftUIColor ?? .gray)
+                    .foregroundColor(.iconPrimary)
                     .frame(width: 32, height: 32)
                 
                 // Transaction Details

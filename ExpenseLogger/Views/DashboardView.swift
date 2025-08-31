@@ -78,6 +78,18 @@ struct DashboardView: View {
         return daysInMonth > 0 ? monthlyTotal / Double(max(daysInMonth, 1)) : 0
     }
     
+    private var currentMpesaBalance: Decimal? {
+        return BalanceCalculator.getCurrentMpesaBalance(from: transactions)
+    }
+    
+    private var monthlyFees: Decimal {
+        return BalanceCalculator.getMonthlyFees(from: transactions)
+    }
+    
+    private var netCashFlow: Decimal {
+        return BalanceCalculator.getNetCashFlow(from: transactions)
+    }
+    
     private var recentTransactions: [Transaction] {
         Array(transactions.prefix(5))
     }
@@ -94,73 +106,111 @@ struct DashboardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .claudeScreenPadding()
                     
-                    // Monthly Summary Hero Card
-                    CTCard {
-                        VStack(alignment: .leading, spacing: CTSpacing.md) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                    CTTextStyle.caption("Total Spent")
-                                    Text("KES \(monthlyTotal, specifier: "%.2f")")
-                                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                                        .foregroundColor(.accentColor)
+                    // M-Pesa Balance Hero Card
+                    VStack(alignment: .leading, spacing: CTSpacing.md) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: CTSpacing.sm) {
+                                Text("M-Pesa Balance")
+                                    .font(.balanceLabel)
+                                    .foregroundColor(.textSecondary)
+                                if let balance = currentMpesaBalance {
+                                    HStack(spacing: 6) {
+                                        Text("KES")
+                                            .font(.balanceLabel)
+                                            .foregroundColor(.textSecondary)
+                                        Text("\(NSDecimalNumber(decimal: balance).doubleValue, specifier: "%.2f")")
+                                            .font(.balanceAmount)
+                                            .foregroundColor(balance >= 0 ? .successColor : .errorColor)
+                                    }
+                                } else {
+                                    Text("No Balance Data")
+                                        .font(.system(size: 24, weight: .medium, design: .rounded))
+                                        .foregroundColor(.textSecondary)
                                 }
                                 
                                 Spacer()
                                 
                                 VStack(alignment: .trailing, spacing: CTSpacing.xs) {
-                                    CTTextStyle.caption("Income")
-                                    Text("KES \(monthlyIncome, specifier: "%.2f")")
-                                        .font(.claudeTitleMedium)
-                                        .foregroundColor(.successColor)
+                                    Text("Net Cash Flow")
+                                        .font(.statsLabel)
+                                        .foregroundColor(.textSecondary)
+                                    Text("KES \(NSDecimalNumber(decimal: netCashFlow).doubleValue, specifier: "%.2f")")
+                                        .font(.statsAmount)
+                                        .foregroundColor(netCashFlow >= 0 ? .successColor : .errorColor)
                                 }
                             }
                             
-                            CTTextStyle.caption(currentMonth)
+                            HStack {
+                                Text(currentMonth)
+                                    .font(.transactionDate)
+                                    .foregroundColor(.textTertiary)
+                                Spacer()
+                                if monthlyFees > 0 {
+                                    Text("Fees: KES \(NSDecimalNumber(decimal: monthlyFees).doubleValue, specifier: "%.2f")")
+                                        .font(.transactionDate)
+                                        .foregroundColor(.textTertiary)
+                                }
+                            }
                         }
                     }
+                    .claudeCard()
                     .claudeScreenPadding()
                     
-                    // Quick Stats Row
-                    HStack(spacing: CTSpacing.md) {
-                        // Transaction Count
-                        CTCard(hasBorder: false) {
-                            VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                Text("\(transactionCount)")
-                                    .font(.claudeTitleMedium)
-                                    .foregroundColor(.textPrimary)
-                                CTTextStyle.caption("Transactions")
-                            }
+                    // Balance Stats Row
+                    HStack(spacing: CTSpacing.sm) {
+                        // Monthly Expenses
+                        VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                            Text("KES \(monthlyTotal, specifier: "%.0f")")
+                                .font(.statsAmount)
+                                .foregroundColor(.errorColor)
+                            Text("Expenses")
+                                .font(.statsLabel)
+                                .foregroundColor(.textSecondary)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(CTSpacing.md)
+                        .background(Color.cardBackground)
+                        .cornerRadius(CTCornerRadius.card)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CTCornerRadius.card)
+                                .stroke(Color.cardBorder, lineWidth: 1)
+                        )
                         
-                        // Top Category
-                        CTCard(hasBorder: false) {
-                            VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                HStack(spacing: CTSpacing.xs) {
-                                    if let category = topCategory {
-                                        Image(systemName: category.icon ?? "tag")
-                                            .foregroundColor(Color(hex: category.color ?? "#6B7280"))
-                                        Text(category.name ?? "Unknown")
-                                            .font(.claudeHeadline)
-                                            .foregroundColor(.textPrimary)
-                                    } else {
-                                        Text("None")
-                                            .font(.claudeHeadline)
-                                            .foregroundColor(.textSecondary)
-                                    }
-                                }
-                                CTTextStyle.caption("Top Category")
-                            }
+                        // Monthly Income
+                        VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                            Text("KES \(monthlyIncome, specifier: "%.0f")")
+                                .font(.statsAmount)
+                                .foregroundColor(.successColor)
+                            Text("Income")
+                                .font(.statsLabel)
+                                .foregroundColor(.textSecondary)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(CTSpacing.md)
+                        .background(Color.cardBackground)
+                        .cornerRadius(CTCornerRadius.card)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CTCornerRadius.card)
+                                .stroke(Color.cardBorder, lineWidth: 1)
+                        )
                         
-                        // Average per Day
-                        CTCard(hasBorder: false) {
-                            VStack(alignment: .leading, spacing: CTSpacing.xs) {
-                                Text("KES \(averagePerDay, specifier: "%.0f")")
-                                    .font(.claudeTitleMedium)
-                                    .foregroundColor(.textPrimary)
-                                CTTextStyle.caption("Daily Avg")
-                            }
+                        // Monthly Fees
+                        VStack(alignment: .leading, spacing: CTSpacing.xs) {
+                            Text("KES \(NSDecimalNumber(decimal: monthlyFees).doubleValue, specifier: "%.0f")")
+                                .font(.statsAmount)
+                                .foregroundColor(.warningColor)
+                            Text("M-Pesa Fees")
+                                .font(.statsLabel)
+                                .foregroundColor(.textSecondary)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(CTSpacing.md)
+                        .background(Color.cardBackground)
+                        .cornerRadius(CTCornerRadius.card)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CTCornerRadius.card)
+                                .stroke(Color.cardBorder, lineWidth: 1)
+                        )
                     }
                     .claudeScreenPadding()
                     
@@ -196,18 +246,18 @@ struct DashboardView: View {
                                 .padding(.vertical, CTSpacing.lg)
                             }
                         } else {
-                            CTCard {
-                                VStack(spacing: 0) {
-                                    ForEach(Array(recentTransactions.enumerated()), id: \.element.id) { index, transaction in
-                                        TransactionRow(transaction: transaction)
-                                        
-                                        if index < recentTransactions.count - 1 {
-                                            Divider()
-                                                .padding(.horizontal, CTSpacing.md)
-                                        }
+                            VStack(spacing: 0) {
+                                ForEach(Array(recentTransactions.enumerated()), id: \.element.id) { index, transaction in
+                                    TransactionRow(transaction: transaction)
+                                        .padding(.vertical, CTSpacing.lg)
+                                    
+                                    if index < recentTransactions.count - 1 {
+                                        Divider()
+                                            .background(Color.cardBorder)
                                     }
                                 }
                             }
+                            .claudeCard()
                         }
                     }
                     .claudeScreenPadding()
@@ -251,51 +301,56 @@ struct TransactionRow: View {
             // Category Icon
             Image(systemName: transaction.category?.icon ?? "questionmark.circle")
                 .font(.title2)
-                .foregroundColor(transaction.category?.swiftUIColor ?? .gray)
+                .foregroundColor(.iconPrimary)
                 .frame(width: 32, height: 32)
             
             // Transaction Details
             VStack(alignment: .leading, spacing: CTSpacing.xs) {
                 Text(transaction.merchant)
-                    .font(.headline)
+                    .font(.merchantName)
                     .foregroundColor(.textPrimary)
                     .lineLimit(1)
                 
                 HStack(spacing: CTSpacing.xs) {
                     Text(transaction.date.formatted(date: .abbreviated, time: .omitted))
-                        .font(.caption)
+                        .font(.transactionDate)
                         .foregroundColor(.textSecondary)
                     
-                    if let notes = transaction.notes, !notes.isEmpty {
+                    Text("•")
+                        .font(.transactionDate)
+                        .foregroundColor(.textTertiary)
+                    
+                    Text(transaction.transactionType.rawValue.capitalized)
+                        .font(.transactionType)
+                        .foregroundColor(.textTertiary)
+                    
+                    if let category = transaction.category {
                         Text("•")
-                            .font(.caption)
-                            .foregroundColor(.textSecondary)
+                            .font(.transactionDate)
+                            .foregroundColor(.textTertiary)
                         
-                        Text(notes)
-                            .font(.caption)
-                            .foregroundColor(.textSecondary)
-                            .lineLimit(1)
+                        Text(category.name)
+                            .font(.transactionType)
+                            .foregroundColor(.textTertiary)
                     }
                 }
             }
             
             Spacer()
             
-            // Amount
+            // Amount and Balance Info
             VStack(alignment: .trailing, spacing: CTSpacing.xs) {
                 Text(transaction.isIncome ? "+\(formatAmount(transaction.amount))" : "-\(formatAmount(transaction.amount))")
-                    .font(.headline)
-                    .foregroundColor(transaction.isIncome ? .successColor : .textPrimary)
+                    .font(.statsAmount)
+                    .foregroundColor(transaction.isIncome ? .successColor : .errorColor)
                 
-                if let category = transaction.category {
-                    Text(category.name)
-                        .font(.caption)
-                        .foregroundColor(.textSecondary)
+                if transaction.fees > 0 {
+                    Text("Fee: \(formatAmount(transaction.fees))")
+                        .font(.transactionType)
+                        .foregroundColor(.textTertiary)
                 }
             }
         }
-        .padding(.vertical, CTSpacing.sm)
-        .padding(.horizontal, CTSpacing.md)
     }
 }
 

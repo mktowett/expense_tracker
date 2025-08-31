@@ -21,17 +21,24 @@ extension View {
     
     /// Claude-style card with minimal styling
     func claudeCard(
-        backgroundColor: Color = .primaryBackground,
-        borderColor: Color = .borderLight,
-        hasBorder: Bool = true
+        backgroundColor: Color = .cardBackground,
+        borderColor: Color = .cardBorder,
+        hasBorder: Bool = true,
+        hasShadow: Bool = true
     ) -> some View {
         self
             .padding(CTSpacing.cardPadding)
             .background(backgroundColor)
-            .cornerRadius(CTCornerRadius.standard)
+            .cornerRadius(CTCornerRadius.card)
             .overlay(
-                RoundedRectangle(cornerRadius: CTCornerRadius.standard)
+                RoundedRectangle(cornerRadius: CTCornerRadius.card)
                     .stroke(hasBorder ? borderColor : .clear, lineWidth: 1)
+            )
+            .shadow(
+                color: hasShadow ? .cardShadow : .clear,
+                radius: CTShadow.card.radius,
+                x: CTShadow.card.offset.width,
+                y: CTShadow.card.offset.height
             )
     }
     

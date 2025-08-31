@@ -25,6 +25,13 @@ final class Transaction {
     var createdAt: Date
     var updatedAt: Date
     
+    // Balance tracking fields
+    var mpesaBalanceAfter: Decimal?
+    var mpesaBalanceBefore: Decimal?
+    var totalCost: Decimal {
+        return isIncome ? amount : amount + fees
+    }
+    
     // Relationship
     var category: Category?
     
@@ -40,7 +47,9 @@ final class Transaction {
         fees: Decimal = 0.0,
         isIncome: Bool = false,
         notes: String? = nil,
-        category: Category? = nil
+        category: Category? = nil,
+        mpesaBalanceAfter: Decimal? = nil,
+        mpesaBalanceBefore: Decimal? = nil
     ) {
         self.id = UUID()
         self.amount = amount
@@ -55,6 +64,8 @@ final class Transaction {
         self.isIncome = isIncome
         self.notes = notes
         self.category = category
+        self.mpesaBalanceAfter = mpesaBalanceAfter
+        self.mpesaBalanceBefore = mpesaBalanceBefore
         self.createdAt = Date()
         self.updatedAt = Date()
     }
